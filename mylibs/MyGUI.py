@@ -300,7 +300,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
     def _setInstrument(self, lbox, inlist):
         # Creates an instance of the Inst_Class class from rm_setup as self.instrument.
         # This attribute will give us access to the instrument methods defined in rm_setup.
-        self.instrument = InstClass(inlist[lbox.curselection()[0]])
+        self.instrument = InstClass_K2612B(inlist[lbox.curselection()[0]])
         self.observer.subscribe(self._checkCompliance, 0)
 
     def _closeInstrument(self):
@@ -308,7 +308,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         if self.instrument is None:
             pass
         else:
-            self.instrument.__close__()
+            self.instrument._close()
             self.instrument = None
 
     def configSMU(self, what, value, chan):
@@ -362,9 +362,9 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
                     print('Bad Input')
 
     def _checkCompliance(self):
-        self.complianceA = True if self.instrument.__query__('smua.source.compliance') == 'true' else False
+        self.complianceA = True if self.instrument._query('smua.source.compliance') == 'true' else False
         # print(self.complianceA)
-        self.complianceB = True if self.instrument.__query__('smub.source.compliance') == 'true' else False
+        self.complianceB = True if self.instrument._query('smub.source.compliance') == 'true' else False
         # print(self.complianceB)
 
     def startMeasurement(self, float):

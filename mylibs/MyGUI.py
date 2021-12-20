@@ -95,7 +95,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         container.grid_rowconfigure(0, weight=1)  # It is necessary to give weight to the grid cells for this to work.
         container.grid_columnconfigure(0, weight=1)
         self.mid_subframes = {}
-        for F in (Blank, InstCont  # , R_t_Measurement, I_V_Measurement,
+        for F in (Blank, InstCont_K2612B, InstCont_K2612BandK2182A  # , R_t_Measurement, I_V_Measurement,
                 # , Pulse_Series_Measurement
                   ):  # Classes are defined in gui_frames
             # print(F)
@@ -300,11 +300,11 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
                                                                     fill="green")
 
             fill = 'blue' if self.complianceA else 'gray'
-            frame = self.mid_subframes[InstCont]
+            frame = self.mid_subframes[InstCont_K2612B]
             frame.chanA_Measframe.complianceWarning.itemconfig(frame.chanA_Measframe.complianceWarning.bool_indicator,
                                                                fill=fill)
             fill = 'blue' if self.complianceB else 'gray'
-            frame = self.mid_subframes[InstCont]
+            frame = self.mid_subframes[InstCont_K2612B]
             frame.chanB_Measframe.complianceWarning.itemconfig(frame.chanB_Measframe.complianceWarning.bool_indicator,
                                                                fill=fill)
             if any([self.complianceA, self.complianceB]):
@@ -375,7 +375,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
 
 
     def configSMU(self, what, value, chan):
-        # Config k2612B_instrument method called by various tk.OptionMenus in the InstCont frame of Frame 2. See Schematic.
+        # Config k2612B_instrument method called by various tk.OptionMenus in the InstCont_K2612B frame of Frame 2. See Schematic.
         if self.k2612B_instrument is None:
             pass
         else:
@@ -393,7 +393,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
                 self.k2612B_instrument.sense_remote(chan)
 
     def commandSMU(self, what, config_widget, chan, val):
-        # Command k2612B_instrument method called by various tk.Entrys in the InstCont frame of Frame 2. See Schematic.
+        # Command k2612B_instrument method called by various tk.Entrys in the InstCont_K2612B frame of Frame 2. See Schematic.
         # val is passed as the entry tk.StringVar, values are retrieved by .get()
         if self.k2612B_instrument is None:
             pass
@@ -436,16 +436,28 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
     #     self.complianceB = True if self.k2612B_instrument._query('smub.source.compliance') == 'true' else False
     #     # print(self.complianceB)
 
-    def startMeasurement(self, float):
-        print(self.filedir)
+    def _checkConditions_k2612B(self,frame):
         if self.filedir is None:
             tk.messagebox.showwarning('ERROR: No SAVEDIR', 'Please select a saving directory first.')
+            return False
         elif self.k2612B_instrument is None:
-            tk.messagebox.showwarning('ERROR: No INSTRUMENT', 'Please connect to an k2612B_instrument first.')
-        elif self.mid_subframes[InstCont].chanA_Subframe.voltmeter_bool == 0 and \
-                self.mid_subframes[InstCont].chanB_Subframe.voltmeter_bool == 0:
+            tk.messagebox.showwarning('ERROR: No INSTRUMENT', 'Please connect to an instrument first.')
+            return False
+        elif self.mid_subframes[frame].chanA_Subframe.voltmeter_bool == 0 and \
+                self.mid_subframes[frame].chanB_Subframe.voltmeter_bool == 0:
             tk.messagebox.showwarning('ERROR: No Voltmeter', 'Please designate one channel to be the voltmeter first.')
+            return False
         else:
+            return True
+
+    def startMeasurement(self, float):
+        print(self.filedir)
+        if float=='Rt' or float == 'PLS':
+            cond=self._checkConditions_k2612B(InstCont_K2612B)
+        elif float == 'Rt_nvm' or float == 'PLS_nvm':
+            cond=self._checkConditions_k2612B(InstCont_K2612BandK2182A)
+
+        if cond:
             if float == 'Rt':
                 m = R_t_Measurement(self.mid_frame, self)
                 m.grid(row=0, column=0, sticky="nsew")
@@ -461,6 +473,16 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
                 m.grid(row=0, column=0, sticky="nsew")
                 self.mid_subframes[Pulse_Series_Measurement] = m
                 self._showFrame(Pulse_Series_Measurement)
+            elif float == 'Rt_nvm':
+                m = R_t_Measurement_K2612Bandk2182A(self.mid_frame, self)
+                m.grid(row=0, column=0, sticky="nsew")
+                self.mid_subframes[R_t_Measurement_K2612Bandk2182A] = m
+                self._showFrame(R_t_Measurement_K2612Bandk2182A)
+            elif float == 'PLS_nvm':
+                m = Pulse_Series_Measurement_K2612Bandk2182A(self.mid_frame, self)
+                m.grid(row=0, column=0, sticky="nsew")
+                self.mid_subframes[Pulse_Series_Measurement_K2612Bandk2182A] = m
+                self._showFrame(Pulse_Series_Measurement_K2612Bandk2182A)
             else:
                 raise AssertionError
 

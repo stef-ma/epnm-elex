@@ -23,7 +23,7 @@ class Blank(tk.Frame):
     """Blank black frame to use as basis for buiding the app,no width or height specified."""
 
     def __init__(self, parent, controller):  # Controller must be included
-        # so I can call it together with InstCont in gui.
+        # so I can call it together with InstCont_K2612B in gui.
         tk.Frame.__init__(self, parent)
         self.configure(background='black', borderwidth=0)
 

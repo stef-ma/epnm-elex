@@ -95,9 +95,10 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         container.grid_rowconfigure(0, weight=1)  # It is necessary to give weight to the grid cells for this to work.
         container.grid_columnconfigure(0, weight=1)
         self.mid_subframes = {}
-        for F in (Blank, InstCont_K2612B, InstCont_K2612BandK2182A  # , R_t_Measurement, I_V_Measurement,
+        for F in (Blank, InstCont_K2612B, InstCont_K2612BandK2182A, InstCont_K6221andK2182A
+                # , R_t_Measurement, I_V_Measurement,
                 # , Pulse_Series_Measurement
-                  ):  # Classes are defined in gui_frames
+                  ):  # Classes are defined elsewhere
             # print(F)
             frame = F(container, self)
             frame.grid(row=0, column=0, sticky="nsew")
@@ -421,6 +422,44 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
                         self.k2612B_instrument.src_level_AMPS(chan, val_str)
                     elif what == 'Level' and config_widget == 'V':
                         self.k2612B_instrument.src_level_VOLTS(chan, val_str)
+                except:
+                    print('Bad Input')
+
+    def commandK6221(self,what,val):
+        if self.k6221_instrument is None:
+            pass
+        else:
+            if val.get()[:0] in ['e', 'E', '.', '-', '+', ' ']:
+                pass
+            else:
+                try:
+                    val_str = val.get()
+                    val_float = float(val_str)
+                    if what == 'Compliance':
+                        self.k6221_instrument.sour_comp(val_float)
+                    elif what == 'Range':
+                        self.k6221_instrument.sour_rng(val_float)
+                    elif what == 'Level':
+                        self.k6221_instrument.sour_lvl(val_float)
+                except:
+                    print('Bad Input')
+
+    def commandK2182A(self,what,val):
+        if self.k2182A_instrument is None:
+            pass
+        else:
+            if val.get()[:0] in ['e', 'E', '.', '-', '+', ' ']:
+                pass
+            else:
+                try:
+                    val_str = val.get()
+                    val_float = float(val_str)
+                    if what == 'Rate':
+                        self.k6221_instrument.set_rate(val_float)
+                    elif what == 'Range':
+                        self.k6221_instrument.set_rng(val_float)
+                    elif what == 'Digits':
+                        self.k6221_instrument.set_digits(val_str)
                 except:
                     print('Bad Input')
 

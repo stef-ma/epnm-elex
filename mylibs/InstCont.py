@@ -1,9 +1,10 @@
-
 # import matplotlib as mpl
 # from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 # from matplotlib.figure import Figure
 # import tkinter as tk
 # from tkinter import ttk
+import time
+
 from mylibs.BaseFrames import *
 from mylibs.RmSetup import *
 
@@ -57,30 +58,30 @@ class InstCont_K2612B(tk.LabelFrame):
         top_frame.pack(side='top')
 
         # We create extra labelframes for easier organizing. I have suffered greatly to figure this out. :c
-        lframeA = tk.LabelFrame(top_frame, width=controller.width / 5, height=controller.pane_height*2, bg='black',
+        lframeA = tk.LabelFrame(top_frame, width=controller.width / 5, height=controller.pane_height * 2, bg='black',
                                 fg='white', bd=4, padx=10, pady=2, text='ChA')
         lframeA.pack_propagate(0)
-        lframeA.grid(row=0, column=0,padx=10)
+        lframeA.grid(row=0, column=0, padx=10)
         # We init the subframes inside top_frame as instances of MeasurementAndOutputSubframe. See below.
         self.chanA_Measframe = MeasurementAndOutputSubframe(lframeA, controller, chan_a, self)
         self.chanA_Measframe.pack()
 
         # We init the subframes inside top_frame as instances of Channel_Subframe. See below.
         self.chanA_Subframe = ChannelSubframe(top_frame, chan_a, controller)
-        self.chanA_Subframe.grid(row=0, column=1,padx=10)
+        self.chanA_Subframe.grid(row=0, column=1, padx=10)
 
         self.chanB_Subframe = ChannelSubframe(top_frame, chan_b, controller)
-        self.chanB_Subframe.grid(row=0, column=2,padx=10)
+        self.chanB_Subframe.grid(row=0, column=2, padx=10)
 
-        lframeB = tk.LabelFrame(top_frame, width=controller.width / 5, height=controller.pane_height*2, bg='black',
+        lframeB = tk.LabelFrame(top_frame, width=controller.width / 5, height=controller.pane_height * 2, bg='black',
                                 fg='white', bd=4, padx=10, pady=2, text='ChB')
-        lframeB.grid(row=0, column=3,padx=10)
+        lframeB.grid(row=0, column=3, padx=10)
         lframeB.pack_propagate(0)
         self.chanB_Measframe = MeasurementAndOutputSubframe(lframeB, controller, chan_b, self)
         self.chanB_Measframe.pack()
 
         # Mid Frame
-        mid_frame = NewFrame(self, controller.width, controller.pane_height *2)
+        mid_frame = NewFrame(self, controller.width, controller.pane_height * 2)
         mid_frame.pack_propagate(0)
         mid_frame.pack(side='top')
         self.measurement_switcher = MeasurementSwitcher(mid_frame, self)
@@ -91,8 +92,6 @@ class InstCont_K2612B(tk.LabelFrame):
         bot_frame = NewFrame(self, controller.width, controller.pane_height)
         bot_frame.pack_propagate(0)
         bot_frame.pack(side='bottom')
-
-
 
         # make A middle frame for quick resistance readings
         bot_mid_frame = NewFrame(bot_frame, controller.width / 3, controller.pane_height)
@@ -112,12 +111,10 @@ class InstCont_K2612B(tk.LabelFrame):
         # comp_frame.pack_propagate(0)
         # comp_frame.pack(side='bottom', padx=2, pady=2)
 
-
         # self.chB_complianceWarning = ComplianceIndicator(comp_frame, self)
         # self.chB_complianceWarning.pack(side='right')
         # self.chB_complianceWarning.makeOval()
         # self.chB_complianceWarning.makeText('ChB')
-
 
     def readSettings(self, chan):
         # Reads the settings for a given channel and updates the respective disabled entries in
@@ -267,33 +264,33 @@ class InstCont_K2612BandK2182A(tk.LabelFrame):
         top_frame.pack(side='top')
 
         # We create extra labelframes for easier organizing. I have suffered greatly to figure this out. :c
-        lframeA = tk.LabelFrame(top_frame, width=controller.width / 5, height=controller.pane_height*2, bg='black',
+        lframeA = tk.LabelFrame(top_frame, width=controller.width / 5, height=controller.pane_height * 2, bg='black',
                                 fg='white', bd=4, padx=10, pady=2, text='ChA')
         lframeA.pack_propagate(0)
-        lframeA.grid(row=0, column=0,padx=10)
+        lframeA.grid(row=0, column=0, padx=10)
         # We init the subframes inside top_frame as instances of MeasurementAndOutputSubframe. See below.
         self.chanA_Measframe = MeasurementAndOutputSubframe(lframeA, controller, chan_a, self)
         self.chanA_Measframe.pack()
 
         # We init the subframes inside top_frame as instances of Channel_Subframe. See below.
         self.chanA_Subframe = ChannelSubframe(top_frame, chan_a, controller)
-        self.chanA_Subframe.grid(row=0, column=1,padx=10)
+        self.chanA_Subframe.grid(row=0, column=1, padx=10)
 
         self.chanB_Subframe = ChannelSubframe(top_frame, chan_b, controller)
-        self.chanB_Subframe.grid(row=0, column=2,padx=10)
+        self.chanB_Subframe.grid(row=0, column=2, padx=10)
 
-        lframeB = tk.LabelFrame(top_frame, width=controller.width / 5, height=controller.pane_height*2, bg='black',
+        lframeB = tk.LabelFrame(top_frame, width=controller.width / 5, height=controller.pane_height * 2, bg='black',
                                 fg='white', bd=4, padx=10, pady=2, text='ChB')
-        lframeB.grid(row=0, column=3,padx=10)
+        lframeB.grid(row=0, column=3, padx=10)
         lframeB.pack_propagate(0)
         self.chanB_Measframe = MeasurementAndOutputSubframe(lframeB, controller, chan_b, self)
         self.chanB_Measframe.pack()
 
         # Mid Frame
-        mid_frame = NewFrame(self, controller.width, controller.pane_height *2)
+        mid_frame = NewFrame(self, controller.width, controller.pane_height * 2)
         mid_frame.pack_propagate(0)
         mid_frame.pack(side='top')
-        self.measurement_switcher = MeasurementSwitcher(mid_frame, self, 'Rt_nvm','IV','PLS_nvm')
+        self.measurement_switcher = MeasurementSwitcher(mid_frame, self, 'Rt_nvm', 'IV', 'PLS_nvm')
         self.measurement_switcher.pack(fill='both', pady=2)
         self.measurement_switcher.pack_propagate(0)
 
@@ -301,8 +298,6 @@ class InstCont_K2612BandK2182A(tk.LabelFrame):
         bot_frame = NewFrame(self, controller.width, controller.pane_height)
         bot_frame.pack_propagate(0)
         bot_frame.pack(side='bottom')
-
-
 
         # make A middle frame for quick resistance readings
         bot_mid_frame = NewFrame(bot_frame, controller.width / 3, controller.pane_height)
@@ -322,12 +317,10 @@ class InstCont_K2612BandK2182A(tk.LabelFrame):
         # comp_frame.pack_propagate(0)
         # comp_frame.pack(side='bottom', padx=2, pady=2)
 
-
         # self.chB_complianceWarning = ComplianceIndicator(comp_frame, self)
         # self.chB_complianceWarning.pack(side='right')
         # self.chB_complianceWarning.makeOval()
         # self.chB_complianceWarning.makeText('ChB')
-
 
     def readSettings(self, chan):
         # Reads the settings for a given channel and updates the respective disabled entries in
@@ -433,6 +426,314 @@ class InstCont_K2612BandK2182A(tk.LabelFrame):
             subframe = self.chanB_Measframe
             subframe.readUpdate(curr, volt)
             self.multimeter_Measframe.updateCallOut()
+
+
+class InstCont_K6221andK2182A(tk.LabelFrame):
+    """The Manual Instrument Control Frame."""
+
+    def __init__(self, parent, controller):
+        # Start by initializing self as a tk.LabelFrame with the label 'Instrument Control'
+        tk.LabelFrame.__init__(self, parent, bg='black', fg='white', bd=5, padx=10, pady=10, text='Instrument Control',
+                               labelanchor='n')
+        self.configure(background='black')
+        # Set the controller as an attribute for easier handling.
+        self.controller = controller
+        # Create constants compatible with rm_setup for the channels so you can create
+
+        # Frames: OUTDATEDOUTDATEDOUTDATEDOUTDATEDOUTDATEDOUTDATEDOUTDATED
+        #   |----------------InstCont_K2612B---------------|OUTDATED
+        #   |               top_frame               |
+        #   |                   |                   |
+        #   |    chanA_Subframe | chanB_Subframe    |OUTDATED
+        #   |                   |                   |
+        #   |                   |                   |
+        #   |------------------ |-------------------|
+        #   |                                       |
+        #   |                                       |
+        #   |                                       |OUTDATED
+        #   |                                       |
+        #   |------------------ |------------------ |
+        #   |                bot_frame              |
+        #   |                   |                   |OUTDATED
+        #   | chanA_Measframe   |  chanB_Measframe  |
+        #   |                   |                   |
+        #   |------------------ |-------------------|OUTDATED
+
+        # The Frames are either instances of New_Frame (Subframe) of tk.LabelFrame (Measframe).
+        # Top Frames
+        top_frame = NewFrame(self, controller.width, 2 * controller.pane_height)
+        top_frame.pack_propagate(0)
+        top_frame.pack(side='top')
+
+        self.measurement_switcher = MeasurementSwitcher(top_frame, self, 'Rt_nvm', 'IV', 'PLS_nvm')
+        self.measurement_switcher.pack(fill='both', pady=2)
+        self.measurement_switcher.pack_propagate(0)
+
+        # Mid Frame
+        mid_frame = NewFrame(self, controller.width, controller.pane_height * 4)
+        mid_frame.pack_propagate(0)
+        mid_frame.pack(side='top')
+        mid_frame_left = NewFrame(mid_frame, controller.width / 2 - 5, controller.pane_height * 4 - 5)
+        mid_frame_left.pack_propagate(0)
+        mid_frame_left.pack(side='left')
+        mid_frame_right = NewFrame(mid_frame, controller.width / 2 - 5, controller.pane_height * 4 - 5)
+        mid_frame_right.pack_propagate(0)
+        mid_frame_right.pack(side='right')
+
+        lframeSRC = tk.LabelFrame(mid_frame_left, width=controller.width / 2 - 30,
+                                  height=controller.pane_height * 4 - 10, bg='black',
+                                  fg='white', bd=4, padx=10, pady=2, text='SRC')
+        # lframeSRC.pack_propagate(0)
+        lframeSRC.pack()
+
+        # fr1 = NewFrame(lframeSRC, controller.width/4-5, controller.pane_height * 3.5)
+        fr1 = tk.LabelFrame(lframeSRC, width=controller.width / 4 - 5, height=controller.pane_height * 3.5, bg='black',
+                            fg='white', bd=4, padx=10, pady=2, text='DC')
+        fr1.grid(row=0, column=0)
+        # fr2 = NewFrame(lframeSRC, controller.width/4-5, controller.pane_height * 3.5)
+        fr2 = tk.LabelFrame(lframeSRC, width=controller.width / 4 - 5, height=controller.pane_height * 3.5, bg='black',
+                            fg='white', bd=4, padx=10, pady=2, text='AC')
+        fr2.grid(row=0, column=1)
+
+        self.compframe_K6221 = EntryFrame_K6221(fr1, 'Compliance', self.controller)
+        self.compframe_K6221.pack()
+
+        self.rngframe_K6221 = EntryFrame_K6221(fr1, 'Range', self.controller)
+        self.rngframe_K6221.pack()
+
+        self.lvlframe_K6221 = EntryFrame_K6221(fr1, 'Level', self.controller)
+        self.lvlframe_K6221.pack()
+
+        self.ampframe_K6221 = EntryFrame_K6221AC(fr2, 'Amplitude', self.controller)
+        self.ampframe_K6221.pack()
+
+        self.acrngframe_K6221 = EntryFrame_K6221AC(fr2, 'Range', self.controller)
+        self.acrngframe_K6221.pack()
+
+        self.freqframe_K6221 = EntryFrame_K6221AC(fr2, 'Frequency', self.controller)
+        self.freqframe_K6221.pack()
+
+        self.durframe_K6221 = EntryFrame_K6221AC(fr2, 'Duration', self.controller)
+        self.durframe_K6221.pack()
+
+        self.outp = tk.Button(fr1, text='ON', bg='orange', fg='white',
+                              command=lambda: self.instContTurnOn())
+        self.outp.pack(side='right', padx=2, pady=2)
+
+        self.wave = tk.Button(fr2, text='WAVE ON', bg='orange', fg='white',
+                              command=lambda: self.waveTrigger(self.compframe_K6221.entry_stringvar.get(),
+                                                               self.ampframe_K6221.entry_stringvar.get(),
+                                                               self.freqframe_K6221.entry_stringvar.get(),
+                                                               self.durframe_K6221.entry_stringvar.get()))
+        self.wave.pack(side='right', padx=2, pady=2)
+
+        lframeMEAS = tk.LabelFrame(mid_frame_right, width=controller.width / 2 - 30,
+                                   height=controller.pane_height * 4 - 10, bg='black',
+                                   fg='white', bd=4, padx=10, pady=2, text='MEAS')
+        # lframeMEAS.pack_propagate(0)
+        lframeMEAS.pack()
+
+        # fr3 = NewFrame(lframeMEAS, controller.width/4-5, controller.pane_height * 3.5)
+        # fr3.pack(side='left')
+
+        fr3 = tk.LabelFrame(lframeMEAS, width=controller.width / 4 - 5, height=controller.pane_height * 3.5, bg='black',
+                            fg='white', bd=4, padx=10, pady=2, text='SETUP')
+        fr3.grid(row=0, column=0)
+        # fr2 = NewFrame(lframeSRC, controller.width/4-5, controller.pane_height * 3.5)
+        fr4 = tk.LabelFrame(lframeMEAS, width=controller.width / 4 - 5, height=controller.pane_height * 3.5, bg='black',
+                            fg='white', bd=4, padx=10, pady=2, text='READ')
+        fr4.grid(row=0, column=1)
+
+        self.ratframe_K2182A = EntryFrame_K2182A(fr3, 'Rate', self.controller)
+        self.ratframe_K2182A.pack()
+
+        self.rngframe_K2182A = EntryFrame_K2182A(fr3, 'Range', self.controller)
+        self.rngframe_K2182A.pack()
+
+        self.digframe_K2182A = EntryFrame_K2182A(fr3, 'Digits', self.controller)
+        self.digframe_K2182A.pack()
+
+        fr4_sub1 = tk.LabelFrame(fr4, width=controller.width / 4 - 5, height=controller.pane_height * 3.5, bg='black',
+                                 fg='white', bd=4, padx=10, pady=2, text='Ch1')
+        fr4_sub1.grid(row=0, column=0)
+        fr4_sub2 = tk.LabelFrame(fr4, width=controller.width / 4 - 5, height=controller.pane_height * 3.5, bg='black',
+                                 fg='white', bd=4, padx=10, pady=2, text='Ch2')
+        fr4_sub2.grid(row=1, column=0)
+
+        self.Ch1_read_V_StringVar = tk.StringVar(self.controller)
+        self.Ch1_read_V_StringVar.set('(V)')
+        self.Ch1_read_V = tk.Entry(fr4_sub1)
+        self.Ch1_read_V.insert(0, self.Ch1_read_V_StringVar.get())
+        self.Ch1_read_V.config(state='disabled')
+        self.Ch1_read_V.pack(side='top', padx=2, pady=2)
+
+        self.Ch2_read_V_StringVar = tk.StringVar(self.controller)
+        self.Ch2_read_V_StringVar.set('(V)')
+        self.Ch2_read_V = tk.Entry(fr4_sub2)
+        self.Ch2_read_V.insert(0, self.Ch2_read_V_StringVar.get())
+        self.Ch2_read_V.config(state='disabled')
+        self.Ch2_read_V.pack(side='top', padx=2, pady=2)
+
+        self.controller.observer.subscribe(self._updateMeasurement, 1)
+
+    def waveTrigger(self, comp, amp, freq, dur):
+        if self.controller.k6221_instrument is None:
+            pass
+        else:
+            self.controller.k6221_instrument.performACPLS(comp, amp, freq, 0, False, False, dur)
+            self.compframe_K6221.entry.config(state='disabled')
+            self.rngframe_K6221.entry.config(state='disabled')
+            self.lvlframe_K6221.entry.config(state='disabled')
+            self.outp.config(state='disabled')
+            self.wavetime = self.controller.runtime
+            self.controller.observer.subscribe(self.waveChecker, 1)
+
+    def waveChecker(self):
+        if (self.controller.runtime - self.wavetime) >= float(self.durframe_K6221.entry_stringvar.get()):
+            self.controller.k6221_instrument.abort_ACPLS()
+            self.controller.observer.unsubscribe(self.waveChecker, 1)
+            self.compframe_K6221.entry.config(state='enabled')
+            self.rngframe_K6221.entry.config(state='enabled')
+            self.lvlframe_K6221.entry.config(state='enabled')
+            self.outp.config(state='enabled')
+        else:
+            pass
+
+    def _updateMeasurement(self):
+        # Get data
+        # print('current is '+str(curr))
+        # print('voltage is '+str(volt))
+        # Set subframe
+        if self.controller.k2182A_instrument is None:
+            pass
+        else:
+            nvm1, nvm2 = self.controller.k2182A_instrument.read_both()
+
+            self.Ch1_read_V_StringVar.set(nvm1 + '(V)')
+            self.Ch2_read_V_StringVar.set(nvm2 + '(V)')
+
+            self.Ch1_read_V.config(state='normal')
+            self.Ch1_read_V.delete(0, tk.END)
+            self.Ch1_read_V.insert(0, self.Ch1_read_V_StringVar.get())
+            self.Ch1_read_V.config(state='disabled')
+
+            self.Ch2_read_V.config(state='normal')
+            self.Ch2_read_V.delete(0, tk.END)
+            self.Ch2_read_V.insert(0, self.Ch2_read_V_StringVar.get())
+            self.Ch2_read_V.config(state='disabled')
+
+    def instContTurnOn(self):
+        if self.controller.k6221_instrument is None:
+            pass
+        else:
+            # Output ON in channel!
+            self.controller.k6221_instrument.sour_outp(True)
+            # Change to On button!
+            self._switchButton('on')
+
+    def instContTurnOff(self):
+        if self.controller.k6221_instrument is None:
+            pass
+        else:
+            # Output OFF in channel!
+            self.controller.k6221_instrument.sour_outp(False)
+            # Change to On button!
+            self._switchButton('off')
+
+    def _switchButton(self, command):
+        # Changes the  OUTPUT button between ON and OFF mode.
+        if command == 'on':
+            self.outp.config(text='ON', bg='orange', fg='white',
+                             command=lambda: self.instContTurnOn())
+        elif command == 'off':
+            self.outp.config(text='OFF', bg='BLUE', fg='white',
+                             command=lambda: self.instContTurnOff())
+
+
+class EntryFrame_K6221(tk.LabelFrame):
+    def __init__(self, parent, what, controller):
+        # Init as LabelFrame for more efficient labelling
+        tk.LabelFrame.__init__(self, parent, bg='black', fg='white', bd=5, padx=5, pady=5, text=what)
+        self.configure(background='black')
+        self.controller = controller  # alias the controller
+        # Create the StringVar to hold the user input and create the user input entry.
+        self.entry_stringvar = tk.StringVar(self.controller)
+        self.entry = tk.Entry(self, textvariable=self.entry_stringvar)
+        self.entry.pack(side='left')
+        self.entry_stringvar.trace_add('write',
+                                       lambda a, b, c: self.controller.commandK6221(what, self.entry_stringvar))
+        self.unit_stringvar = tk.StringVar(parent)
+        if what == 'Compliance':
+            unit = 'V'
+        elif what == 'Range':
+            unit = 'A'
+        elif what == 'Level':
+            unit = 'A'
+        else:
+            unit = 'N/A'
+        self.unit_stringvar.set(unit)
+        self.read_out = tk.Entry(self, width=5)
+        self.read_out.insert(3, self.unit_stringvar.get())
+        self.read_out.config(state='disabled')
+        self.read_out.pack(side='right')
+
+
+class EntryFrame_K6221AC(tk.LabelFrame):
+    def __init__(self, parent, what, controller):
+        # Init as LabelFrame for more efficient labelling
+        tk.LabelFrame.__init__(self, parent, bg='black', fg='white', bd=5, padx=5, pady=5, text=what)
+        self.configure(background='black')
+        self.controller = controller  # alias the controller
+        # Create the StringVar to hold the user input and create the user input entry.
+        self.entry_stringvar = tk.StringVar(self.controller)
+        self.entry = tk.Entry(self, textvariable=self.entry_stringvar)
+        self.entry.pack(side='left')
+        # self.entry_stringvar.trace_add('write',
+        #                                lambda a, b, c: self.controller.commandK6221(what,self.entry_stringvar))
+        self.unit_stringvar = tk.StringVar(parent)
+        if what == 'Amplitude':
+            unit = 'A[RMS]'
+        elif what == 'Range':
+            unit = 'A'
+        elif what == 'Duration':
+            unit = 's'
+        elif what == 'Frequency':
+            unit = 'Hz'
+        else:
+            unit = 'N/A'
+        self.unit_stringvar.set(unit)
+        self.read_out = tk.Entry(self, width=10)
+        self.read_out.insert(3, self.unit_stringvar.get())
+        self.read_out.config(state='disabled')
+        self.read_out.pack(side='right')
+
+
+class EntryFrame_K2182A(tk.LabelFrame):
+    def __init__(self, parent, what, controller):
+        # Init as LabelFrame for more efficient labelling
+        tk.LabelFrame.__init__(self, parent, bg='black', fg='white', bd=5, padx=5, pady=5, text=what)
+        self.configure(background='black')
+        self.controller = controller  # alias the controller
+        # Create the StringVar to hold the user input and create the user input entry.
+        self.entry_stringvar = tk.StringVar(self.controller)
+        self.entry = tk.Entry(self, textvariable=self.entry_stringvar)
+        self.entry.pack(side='left')
+        self.entry_stringvar.trace_add('write',
+                                       lambda a, b, c: self.controller.commandK2182A(what, self.entry_stringvar))
+        self.unit_stringvar = tk.StringVar(parent)
+        if what == 'Rate':
+            unit = 'NPLC'
+        elif what == 'Range':
+            unit = 'V'
+        elif what == 'Digits':
+            unit = '[4-8]'
+        else:
+            unit = 'N/A'
+        self.unit_stringvar.set(unit)
+        self.read_out = tk.Entry(self, width=5)
+        self.read_out.insert(3, self.unit_stringvar.get())
+        self.read_out.config(state='disabled')
+        self.read_out.pack(side='right')
 
 
 class ChannelSubframe(NewFrame):
@@ -575,7 +876,7 @@ class MeasurementAndOutputSubframe(NewFrame):
     def __init__(self, parent, controller, channel, overframe):
         # Init as NewFrame
         fac = 4
-        NewFrame.__init__(self, parent, controller.width / fac, controller.pane_height*3)
+        NewFrame.__init__(self, parent, controller.width / fac, controller.pane_height * 3)
         self.overframe = overframe
         # Channel Logic
         if channel == 'a':
@@ -704,7 +1005,7 @@ class MultimeterFrame(NewFrame):
 
 class MeasurementSwitcher(tk.LabelFrame):
 
-    def __init__(self, parent, overframe, string1='Rt', string2='IV', string3='PLS' ):
+    def __init__(self, parent, overframe, string1='Rt', string2='IV', string3='PLS'):
         tk.LabelFrame.__init__(self, parent, width=overframe.controller.width * .9,
                                height=overframe.controller.pane_height * 2, bg='black', fg='white', bd=5, padx=5,
                                pady=5, text='Measurements', labelanchor='n')

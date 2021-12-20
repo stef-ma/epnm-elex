@@ -466,6 +466,9 @@ class InstClass_K6221():
     def arm_init_ACPLS(self):
         self._send(':SOUR:WAVE:ARM; :SOUR:WAVE:INIT')
 
+    def abort_ACPLS(self):
+        self._send(':SOUR:WAVE:ABOR')
+
     def performACPLS(self, comp, amp, freq, offs, autorng, waverngm, dur):
         self._reset()
         self.sour_wave()

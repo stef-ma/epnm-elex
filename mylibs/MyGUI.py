@@ -19,7 +19,9 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         tk.Tk.__init__(self, *args, **kwargs)
 
         # Attributes
-        self.instrument = None  # pyvisa resourcemanager instrument controller
+        self.k2612B_instrument = None  # pyvisa resourcemanager k2612B_instrument controller
+        self.k6221_instrument = None  # pyvisa resourcemanager k2612B_instrument controller
+        self.k2182A_instrument = None  # pyvisa resourcemanager k2612B_instrument controller
         self.filedir = None  # savefile later turned to tkinter filedialog object, use .get() to read
         self.width = 1300  # for window geometry
         self.pane_height = 85  # for window geometry
@@ -104,13 +106,13 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         # self._showFrame(Pulse_Series_Measurement)
 
         # Frame 3
-        # Will have a savefile, execution time and instrument connection indicator
+        # Will have a savefile, execution time and k2612B_instrument connection indicator
         self.bot_frame = NewFrame(self, self.width, self.pane_height)
         self.bot_frame.pack_propagate(0)
         self.bot_frame.pack(side='top', fill='x')
         self._decorateBotFrame(self.bot_frame)
 
-        # Updating method for time fOand instrument indicator for the first time
+        # Updating method for time fOand k2612B_instrument indicator for the first time
         self.observer.subscribe(self._time, 2)
         self.observer.subscribe(self._updateBottom, 0)
 
@@ -145,13 +147,14 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
 
     def _safeExit(self):
         # safe exit method with shutdown for the SMU!
-        if self.instrument is None:
-            if self.file_obj is not None: self.file_obj.close()
-            self.destroy()
-        else:
-            self._closeInstrument()  # see rm_setup
-            if self.file_obj is not None: self.file_obj.close()
-            self.destroy()
+        for instrument in [self.k2612B_instrument, self.k6221_instrument, self.k2182A_instrument]:
+            if instrument is None:
+                pass
+            else:
+                self._closeInstrument(instrument)
+        if self.file_obj is not None:
+            self.file_obj.close()
+        self.destroy()
 
     def _startUp(self):
         # Start Button method. Creates the InstSelect frame whose invocation calls inst_seek() from rm_setup.
@@ -165,9 +168,14 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         self._editButton(self.top_frame, 'se')
 
     def _editInstrument(self):
-        # Edit Button method. Closes the instrument via _closeInstrument, destroys the InstSelect frame in Frame 2,
-        # and then recreates it to allow renewed connection to the instrument.
-        self._closeInstrument()
+        # Edit Button method. Closes the k2612B_instrument via _closeInstrument, destroys the InstSelect frame in Frame 2,
+        # and then recreates it to allow renewed connection to the k2612B_instrument.
+        self._closeInstrument(self.k2612B_instrument)
+        self.k2612B_instrument = None
+        self._closeInstrument(self.k6221_instrument)
+        self.k6221_instrument = None
+        self._closeInstrument(self.k2182A_instrument)
+        self.k2182A_instrument = None
         self.mid_subframes[InstSelect].destroy()
         frame = InstSelect(self.mid_frame, self)
         frame.grid(row=0, column=0, sticky="nsew")
@@ -222,17 +230,41 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         self.bottom_time_label = tk.Label(bot2, bg='black', fg='white', text='Execution time:' + self.exec_time.get())
         self.bottom_time_label.pack(side='top')
 
-        # Create a bool indicator for instrument connection.
-        self.instrument_bool_indicator_canvas = tk.Canvas(bot2, width=self.pane_height / 2, height=self.pane_height / 2,
-                                                          bg='black', bd=0, highlightthickness=0)
-        self.instrument_bool_indicator_canvas.pack(side='top')
-        self.instrument_bool_indicator_canvas.bool_indicator = self.instrument_bool_indicator_canvas.create_oval(
+        # Create a bool indicator for k2612B_instrument connection.
+        self.instrument_bool_indicator_canvas_k2612B = tk.Canvas(bot2, width=self.pane_height / 2, height=self.pane_height / 2,
+                                                                 bg='black', bd=0, highlightthickness=0)
+        self.instrument_bool_indicator_canvas_k2612B.pack(side='right')
+        self.instrument_bool_indicator_canvas_k2612B.bool_indicator = self.instrument_bool_indicator_canvas_k2612B.create_oval(
             int(1 / 3 * 1 / 2 * self.pane_height), int(1 / 3 * 1 / 2 * self.pane_height),
             int(2 / 3 * 1 / 2 * self.pane_height), int(2 / 3 * 1 / 2 * self.pane_height), fill="gray")
 
-        # Create a tk.Label for instrument connection.
-        self.instrument_bool_indicator_label = tk.Label(bot2, bg='black', fg='white', text='Instrument connected?')
-        self.instrument_bool_indicator_label.pack(side='top')
+        # Create a tk.Label for k2612B_instrument connection.
+        self.instrument_bool_indicator_label_k2612B = tk.Label(bot2, bg='black', fg='white', text='K2612B connected?')
+        self.instrument_bool_indicator_label_k2612B.pack(side='right')
+
+        # Create a bool indicator for k6221 connection.
+        self.instrument_bool_indicator_canvas_k6221 = tk.Canvas(bot2, width=self.pane_height / 2, height=self.pane_height / 2,
+                                                                 bg='black', bd=0, highlightthickness=0)
+        self.instrument_bool_indicator_canvas_k6221.pack(side='right')
+        self.instrument_bool_indicator_canvas_k6221.bool_indicator = self.instrument_bool_indicator_canvas_k6221.create_oval(
+            int(1 / 3 * 1 / 2 * self.pane_height), int(1 / 3 * 1 / 2 * self.pane_height),
+            int(2 / 3 * 1 / 2 * self.pane_height), int(2 / 3 * 1 / 2 * self.pane_height), fill="gray")
+
+        # Create a tk.Label for k2612B_instrument connection.
+        self.instrument_bool_indicator_label_k6221 = tk.Label(bot2, bg='black', fg='white', text='K6221 connected?')
+        self.instrument_bool_indicator_label_k6221.pack(side='right')
+
+        # Create a bool indicator for k2182A connection.
+        self.instrument_bool_indicator_canvas_k2182A = tk.Canvas(bot2, width=self.pane_height / 2, height=self.pane_height / 2,
+                                                                 bg='black', bd=0, highlightthickness=0)
+        self.instrument_bool_indicator_canvas_k2182A.pack(side='right')
+        self.instrument_bool_indicator_canvas_k2182A.bool_indicator = self.instrument_bool_indicator_canvas_k2182A.create_oval(
+            int(1 / 3 * 1 / 2 * self.pane_height), int(1 / 3 * 1 / 2 * self.pane_height),
+            int(2 / 3 * 1 / 2 * self.pane_height), int(2 / 3 * 1 / 2 * self.pane_height), fill="gray")
+
+        # Create a tk.Label for k2612B_instrument connection.
+        self.instrument_bool_indicator_label_k2182A = tk.Label(bot2, bg='black', fg='white', text='K2182A connected?')
+        self.instrument_bool_indicator_label_k2182A.pack(side='right')
 
     def _updateBottom(self):
         # Updates the indicators created in _decorateBotFrame and the Compliance indicator.
@@ -243,13 +275,29 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         self.exec_time.set(str(int(self.runtime)))
         self.bottom_time_label['text'] = 'Execution time:   ' + self.exec_time.get() + ' s'
 
-        # Set the instrument bool indicator color.
-        if self.instrument is None:
-            self.instrument_bool_indicator_canvas.itemconfig(self.instrument_bool_indicator_canvas.bool_indicator,
-                                                             fill="gray")
+        # Set the k2612B_instrument bool indicator color.
+        if self.k2612B_instrument is None:
+            self.instrument_bool_indicator_canvas_k2612B.itemconfig(self.instrument_bool_indicator_canvas_k2612B.bool_indicator,
+                                                                    fill="gray")
         else:
-            self.instrument_bool_indicator_canvas.itemconfig(self.instrument_bool_indicator_canvas.bool_indicator,
-                                                             fill="green")
+            self.instrument_bool_indicator_canvas_k2612B.itemconfig(self.instrument_bool_indicator_canvas_k2612B.bool_indicator,
+                                                                    fill="green")
+
+        # Set the k6221 bool indicator color.
+        if self.k6221_instrument is None:
+            self.instrument_bool_indicator_canvas_k6221.itemconfig(self.instrument_bool_indicator_canvas_k6221.bool_indicator,
+                                                                    fill="gray")
+        else:
+            self.instrument_bool_indicator_canvas_k6221.itemconfig(self.instrument_bool_indicator_canvas_k6221.bool_indicator,
+                                                                    fill="green")
+
+        # Set the k2182A_instrument bool indicator color.
+        if self.k2182A_instrument is None:
+            self.instrument_bool_indicator_canvas_k2182A.itemconfig(self.instrument_bool_indicator_canvas_k2182A.bool_indicator,
+                                                                    fill="gray")
+        else:
+            self.instrument_bool_indicator_canvas_k2182A.itemconfig(self.instrument_bool_indicator_canvas_k2182A.bool_indicator,
+                                                                    fill="green")
 
             fill = 'blue' if self.complianceA else 'gray'
             frame = self.mid_subframes[InstCont]
@@ -260,7 +308,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
             frame.chanB_Measframe.complianceWarning.itemconfig(frame.chanB_Measframe.complianceWarning.bool_indicator,
                                                                fill=fill)
             if any([self.complianceA, self.complianceB]):
-                self.instrument.beeper(0.2)
+                self.k2612B_instrument.beeper(0.2)
         # Set the filepath display.        
         if self.filedir is None:
             self.save_file_path_label['text'] = 'file: N\A'
@@ -273,7 +321,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         self.halt.pack(anchor=pos, pady=5, padx=5)
 
     def _startButton(self, banner, pos):
-        # Start button; makes you pick an instrument via __Start_up__.
+        # Start button; makes you pick an k2612B_instrument via __Start_up__.
         self.start_button = tk.Button(banner, bg='green', text='START', fg='white', command=self._startUp)
         self.start_button.pack(anchor=pos, pady=5, padx=5)
 
@@ -297,42 +345,57 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
             # filetypes=files, defaultextension=files
         )
 
-    def _setInstrument(self, lbox, inlist):
-        # Creates an instance of the Inst_Class class from rm_setup as self.instrument.
-        # This attribute will give us access to the instrument methods defined in rm_setup.
-        self.instrument = InstClass_K2612B(inlist[lbox.curselection()[0]])
-        self.observer.subscribe(self._checkCompliance, 0)
+    def _setInstrument_K2612B(self, lbox, inlist):
+        # Creates an instance of the Inst_Class class from rm_setup as self.k2612B_instrument.
+        # This attribute will give us access to the InstClass_K2612B methods defined in rm_setup.
+        print(inlist[lbox.curselection()[0]])
+        self.k2612B_instrument = InstClass_K2612B(inlist[lbox.curselection()[0]])
+        self.observer.subscribe(self._checkCompliance_K2612B, 0)
 
-    def _closeInstrument(self):
-        # Closes the instrument connection, if it exists.
-        if self.instrument is None:
+    def _setInstrument_K2182A(self, lbox, inlist):
+        # Creates an instance of the Inst_Class class from rm_setup as self.k2182A_instrument.
+        # This attribute will give us access to the InstClass_K2182A methods defined in rm_setup.
+        print(inlist[lbox.curselection()[0]])
+        self.k2182A_instrument = InstClass_K2182A(inlist[lbox.curselection()[0]])
+
+    def _setInstrument_K6221(self, lbox, inlist):
+        # Creates an instance of the Inst_Class class from rm_setup as self.k6221_instrument.
+        # This attribute will give us access to the InstClass_K6221 methods defined in rm_setup.
+        print(inlist[lbox.curselection()[0]])
+        self.k6221_instrument = InstClass_K6221(inlist[lbox.curselection()[0]])
+        # self.observer.subscribe(self._checkCompliance_K6221, 0) # EDIT THIS
+
+    def _closeInstrument(self,instrument):
+        # Closes the k2612B_instrument connection, if it exists.
+        if instrument is None:
             pass
         else:
-            self.instrument._close()
-            self.instrument = None
+            instrument._close()
+
+
 
     def configSMU(self, what, value, chan):
-        # Config instrument method called by various tk.OptionMenus in the InstCont frame of Frame 2. See Schematic.
-        if self.instrument is None:
+        # Config k2612B_instrument method called by various tk.OptionMenus in the InstCont frame of Frame 2. See Schematic.
+        if self.k2612B_instrument is None:
             pass
         else:
             if what == 'SRC' and value == 'I':
-                self.instrument.src_I(chan)
+                self.k2612B_instrument.src_I(chan)
             elif what == 'SRC' and value == 'V':
-                self.instrument.src_V(chan)
+                self.k2612B_instrument.src_V(chan)
             elif what == 'MEAS' and value == 'I':
-                self.instrument.meas_I(chan)
+                self.k2612B_instrument.meas_I(chan)
             elif what == 'MEAS' and value == 'V':
-                self.instrument.meas_V(chan)
+                self.k2612B_instrument.meas_V(chan)
             elif what == 'SENS' and value == '2-Point':
-                self.instrument.sense_local(chan)
+                self.k2612B_instrument.sense_local(chan)
             elif what == 'SENS' and value == '4-Point':
-                self.instrument.sense_remote(chan)
+                self.k2612B_instrument.sense_remote(chan)
 
     def commandSMU(self, what, config_widget, chan, val):
-        # Command instrument method called by various tk.Entrys in the InstCont frame of Frame 2. See Schematic.
+        # Command k2612B_instrument method called by various tk.Entrys in the InstCont frame of Frame 2. See Schematic.
         # val is passed as the entry tk.StringVar, values are retrieved by .get()
-        if self.instrument is None:
+        if self.k2612B_instrument is None:
             pass
         else:
             if val.get()[:0] in ['e', 'E', '.', '-', '+', ' ']:
@@ -345,34 +408,40 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
                         # Trying to stop it from issuing "set compliance 0" when the user starts typing, as that causes
                         # an error on the isntrument (compliance must be >0!)
                         if config_widget == 'I' and 0.02 <= val_float <= 200:
-                            self.instrument.src_limit_VOLTS(chan, val_str)
+                            self.k2612B_instrument.src_limit_VOLTS(chan, val_str)
                         elif config_widget == 'V' and 0.000_000_01 <= val_float <= 200:
-                            self.instrument.src_limit_AMPS(chan, val_str)
+                            self.k2612B_instrument.src_limit_AMPS(chan, val_str)
                         else:
                             pass
                     elif what == 'Range' and config_widget == 'I':
-                        self.instrument.src_range_AMPS(chan, val_str)
+                        self.k2612B_instrument.src_range_AMPS(chan, val_str)
                     elif what == 'Range' and config_widget == 'V':
-                        self.instrument.src_range_VOLTS(chan, val_str)
+                        self.k2612B_instrument.src_range_VOLTS(chan, val_str)
                     elif what == 'Level' and config_widget == 'I':
-                        self.instrument.src_level_AMPS(chan, val_str)
+                        self.k2612B_instrument.src_level_AMPS(chan, val_str)
                     elif what == 'Level' and config_widget == 'V':
-                        self.instrument.src_level_VOLTS(chan, val_str)
+                        self.k2612B_instrument.src_level_VOLTS(chan, val_str)
                 except:
                     print('Bad Input')
 
-    def _checkCompliance(self):
-        self.complianceA = True if self.instrument._query('smua.source.compliance') == 'true' else False
+    def _checkCompliance_K2612B(self):
+        self.complianceA = True if self.k2612B_instrument._query('smua.source.compliance') == 'true' else False
         # print(self.complianceA)
-        self.complianceB = True if self.instrument._query('smub.source.compliance') == 'true' else False
+        self.complianceB = True if self.k2612B_instrument._query('smub.source.compliance') == 'true' else False
         # print(self.complianceB)
+
+    # def _checkCompliance_K6221(self):
+    #     self.complianceA = True if self.k2612B_instrument._query('smua.source.compliance') == 'true' else False
+    #     # print(self.complianceA)
+    #     self.complianceB = True if self.k2612B_instrument._query('smub.source.compliance') == 'true' else False
+    #     # print(self.complianceB)
 
     def startMeasurement(self, float):
         print(self.filedir)
         if self.filedir is None:
             tk.messagebox.showwarning('ERROR: No SAVEDIR', 'Please select a saving directory first.')
-        elif self.instrument is None:
-            tk.messagebox.showwarning('ERROR: No INSTRUMENT', 'Please connect to an instrument first.')
+        elif self.k2612B_instrument is None:
+            tk.messagebox.showwarning('ERROR: No INSTRUMENT', 'Please connect to an k2612B_instrument first.')
         elif self.mid_subframes[InstCont].chanA_Subframe.voltmeter_bool == 0 and \
                 self.mid_subframes[InstCont].chanB_Subframe.voltmeter_bool == 0:
             tk.messagebox.showwarning('ERROR: No Voltmeter', 'Please designate one channel to be the voltmeter first.')

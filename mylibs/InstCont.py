@@ -1,3 +1,4 @@
+
 # import matplotlib as mpl
 # from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 # from matplotlib.figure import Figure
@@ -121,15 +122,15 @@ class InstCont(tk.LabelFrame):
     def readSettings(self, chan):
         # Reads the settings for a given channel and updates the respective disabled entries in
         # chanX_Subframe via _updateControlFrame
-        func = self.controller.instrument.get_SRC(chan)
+        func = self.controller.k2612B_instrument.get_SRC(chan)
         if int(float(func)) == 0:  # for I src
-            limit = self.controller.instrument.get_limit_V(chan)
-            rng = self.controller.instrument.get_range_I(chan)
-            level = self.controller.instrument.get_level_I(chan)
+            limit = self.controller.k2612B_instrument.get_limit_V(chan)
+            rng = self.controller.k2612B_instrument.get_range_I(chan)
+            level = self.controller.k2612B_instrument.get_level_I(chan)
         elif int(float(func)) == 1:  # for V src
-            limit = self.controller.instrument.get_limit_I(chan)
-            rng = self.controller.instrument.get_range_V(chan)
-            level = self.controller.instrument.get_level_V(chan)
+            limit = self.controller.k2612B_instrument.get_limit_I(chan)
+            rng = self.controller.k2612B_instrument.get_range_V(chan)
+            level = self.controller.k2612B_instrument.get_level_V(chan)
         else:  # For unexpected errors.
             limit = 255
             rng = 255
@@ -163,7 +164,7 @@ class InstCont(tk.LabelFrame):
 
     def instContTurnOn(self, chan):
         # Output ON in channel!
-        self.controller.instrument.outp_ON(chan)
+        self.controller.k2612B_instrument.outp_ON(chan)
         # Subscribe the updater if this is the first channel to get switched on.
         if self.chanA is False and self.chanB is False:
             self.controller.observer.subscribe(self._updateMeasurement, 1)
@@ -177,7 +178,7 @@ class InstCont(tk.LabelFrame):
 
     def instContTurnOff(self, chan):
         # Output OFF in channel!
-        self.controller.instrument.outp_OFF(chan)
+        self.controller.k2612B_instrument.outp_OFF(chan)
         # Flip the measurement variable for channel.
         if chan == 'a':
             self.chanA = False
@@ -207,7 +208,7 @@ class InstCont(tk.LabelFrame):
         # Everything is written twice in case we are simultaneously measuring both channels.
         if self.chanA:
             # Get data
-            curr, volt = self.controller.instrument.measure_channel('a')
+            curr, volt = self.controller.k2612B_instrument.measure_channel('a')
             # print('current is '+str(curr))
             # print('voltage is '+str(volt))
             # Set subframe
@@ -217,7 +218,7 @@ class InstCont(tk.LabelFrame):
 
         if self.chanB:
             # Get data
-            curr, volt = self.controller.instrument.measure_channel('b')
+            curr, volt = self.controller.k2612B_instrument.measure_channel('b')
             # Set subframe
             subframe = self.chanB_Measframe
             subframe.readUpdate(curr, volt)
@@ -272,8 +273,8 @@ class ChannelSubframe(NewFrame):
         self.voltmeter_bool = 0
 
     def _makeVoltmeter(self, channel, controller):
-        controller.instrument.voltmeter(channel)
-        controller.instrument.meas_range_VOLTS(channel)
+        controller.k2612B_instrument.voltmeter(channel)
+        controller.k2612B_instrument.meas_range_VOLTS(channel)
         self.volt_switch.configure(bg='green', command=lambda: self._makeSMU(channel, controller))
         self.comp.entry_stringvar.set('0.02')
         self.rang.entry_stringvar.set('0.000001')
@@ -351,7 +352,7 @@ class InstContSubsMenus(tk.LabelFrame):
         self.configure(background='black')
         self.controller = controller  # alias the controller
         # Create and populate the selectable MenuButtons that the user can use to switch
-        # between various operating modes of the instrument.
+        # between various operating modes of the k2612B_instrument.
         self.info = tk.StringVar(self.controller)
         self.info.set(what)
         self.ddown = tk.OptionMenu(self, self.info, *options,
@@ -569,7 +570,7 @@ class MeasurementSwitcherSubsEntries(NewFrame):
 
 class ComplianceIndicator(tk.Canvas):
     def __init__(self, parent, overframe):
-        # Create a bool indicator for instrument compliance.
+        # Create a bool indicator for k2612B_instrument compliance.
         tk.Canvas.__init__(self, parent, width=overframe.controller.pane_height / 3,
                            height=overframe.controller.pane_height / 3,
                            bg='black', bd=0, highlightthickness=0)

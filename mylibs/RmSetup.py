@@ -2,15 +2,15 @@ from re import split  # We need to process some regular expressions so I'll need
 
 from gpib_ctypes import make_default_gpib
 
-make_default_gpib()
+make_default_gpib() # Comment for NI drivers (Windows)
 
 import pyvisa  # Controls instruments via the VISA protocol
 
-# We create a resourcemanager instance as rm that we use throughout the pyvisa k2612B_instrument control.
+#We create a resourcemanager instance as rm that we use throughout the pyvisa k2612B_instrument control.
 rm = pyvisa.ResourceManager('@py')  # FOSS pyvisa driver
 
 
-# rm = pyvisa.ResourceManager() # NI driver
+#rm = pyvisa.ResourceManager('C:\\Windows\\sysWOW64\\visa32.dll') # NI driver (windows)
 
 
 def inst_seek():
@@ -479,4 +479,4 @@ class InstClass_K6221():
         self.sour_autorange(autorng)
         self.sour_fixwaverange(waverngm)
         self.sour_wave_duration(dur)
-        self.ACPLS_arm_and_inti_pulse()
+        self.arm_init_ACPLS()

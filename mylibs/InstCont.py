@@ -521,10 +521,10 @@ class InstCont_K6221andK2182A(tk.LabelFrame):
         self.outp.pack(side='right', padx=2, pady=2)
 
         self.wave = tk.Button(fr2, text='WAVE ON', bg='orange', fg='white',
-                              command=lambda: self.waveTrigger(self.compframe_K6221.entry_stringvar.get(),
-                                                               self.ampframe_K6221.entry_stringvar.get(),
-                                                               self.freqframe_K6221.entry_stringvar.get(),
-                                                               self.durframe_K6221.entry_stringvar.get()))
+                              command=lambda: self.waveTrigger(float(self.compframe_K6221.entry_stringvar.get()),
+                                                               float(self.ampframe_K6221.entry_stringvar.get()),
+                                                               float(self.freqframe_K6221.entry_stringvar.get()),
+                                                               float(self.durframe_K6221.entry_stringvar.get())))
         self.wave.pack(side='right', padx=2, pady=2)
 
         lframeMEAS = tk.LabelFrame(mid_frame_right, width=controller.width / 2 - 30,
@@ -586,16 +586,27 @@ class InstCont_K6221andK2182A(tk.LabelFrame):
             self.lvlframe_K6221.entry.config(state='disabled')
             self.outp.config(state='disabled')
             self.wavetime = self.controller.runtime
+            self._switchButton_wave('off')
             self.controller.observer.subscribe(self.waveChecker, 1)
+            
+    def waveAbort(self):
+        self.controller.k6221_instrument.abort_ACPLS()
+        self.controller.observer.unsubscribe(self.waveChecker)
+        self.compframe_K6221.entry.config(state='normal')
+        self.rngframe_K6221.entry.config(state='normal')
+        self.lvlframe_K6221.entry.config(state='normal')
+        self.outp.config(state='normal')
+        self._switchButton_wave('on')
 
     def waveChecker(self):
         if (self.controller.runtime - self.wavetime) >= float(self.durframe_K6221.entry_stringvar.get()):
             self.controller.k6221_instrument.abort_ACPLS()
-            self.controller.observer.unsubscribe(self.waveChecker, 1)
-            self.compframe_K6221.entry.config(state='enabled')
-            self.rngframe_K6221.entry.config(state='enabled')
-            self.lvlframe_K6221.entry.config(state='enabled')
-            self.outp.config(state='enabled')
+            self.controller.observer.unsubscribe(self.waveChecker)
+            self.compframe_K6221.entry.config(state='normal')
+            self.rngframe_K6221.entry.config(state='normal')
+            self.lvlframe_K6221.entry.config(state='normal')
+            self.outp.config(state='normal')
+            self._switchButton_wave('on')
         else:
             pass
 
@@ -607,6 +618,7 @@ class InstCont_K6221andK2182A(tk.LabelFrame):
         if self.controller.k2182A_instrument is None:
             pass
         else:
+            self.controller.k2182A_instrument.set_all(1,1e-1,8,0.1)
             nvm1, nvm2 = self.controller.k2182A_instrument.read_both()
 
             self.Ch1_read_V_StringVar.set(nvm1 + '(V)')
@@ -648,6 +660,18 @@ class InstCont_K6221andK2182A(tk.LabelFrame):
         elif command == 'off':
             self.outp.config(text='OFF', bg='BLUE', fg='white',
                              command=lambda: self.instContTurnOff())
+
+    def _switchButton_wave(self, command):
+        # Changes the  OUTPUT button between ON and OFF mode.
+        if command == 'on':
+            self.wave.config(text='WAVE', bg='orange', fg='white',
+                             command=lambda: self.waveTrigger(float(self.compframe_K6221.entry_stringvar.get()),
+                                                               float(self.ampframe_K6221.entry_stringvar.get()),
+                                                               float(self.freqframe_K6221.entry_stringvar.get()),
+                                                               float(self.durframe_K6221.entry_stringvar.get())))
+        elif command == 'off':
+            self.wave.config(text='ABORT', bg='BLUE', fg='white',
+                             command=lambda: self.waveAbort())
 
 
 class EntryFrame_K6221(tk.LabelFrame):

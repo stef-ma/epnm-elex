@@ -8,6 +8,8 @@ import pyvisa  # Controls instruments via the VISA protocol
 
 #We create a resourcemanager instance as rm that we use throughout the pyvisa k2612B_instrument control.
 rm = pyvisa.ResourceManager('@py')  # FOSS pyvisa driver
+# rm = pyvisa.ResourceManager('@ivi')  # ni-visa pyvisa driver
+# rm = pyvisa.ResourceManager()  # default, I think the ni-visa pyvisa driver
 
 
 #rm = pyvisa.ResourceManager('C:\\Windows\\sysWOW64\\visa32.dll') # NI driver (windows)
@@ -15,7 +17,8 @@ rm = pyvisa.ResourceManager('@py')  # FOSS pyvisa driver
 
 def inst_seek():
     # This function returns a dictionary where the keys are the k2612B_instrument response strings to the standard command
-    # "*IDN?" and the values are the addresses rm found the instruments at. The address is the most important
+    # "*IDN?" and the values are the addresses rm found the instrum
+    # ents at. The address is the most important
     # information as it is needed to init instances of Inst_Class.
     insts = dict()
     for instrument in rm.list_resources():
@@ -445,24 +448,24 @@ class InstClass_K6221():
         self.sour_autorange(True)
         self.sour_comp(0.1)
 
-    def testDC(self):
-        self.sour_dc()
-        self.sour_rng(1e-3)
-        self.sour_comp(5e-1)
-        self.sour_curr(1e-5)
-        self.sour_outp(True)
-
-    def testACPLS(self):
-        self._reset()
-        self.sour_wave()
-        self.sour_comp(1e-1)
-        self.sour_wave_amp(1e-5)
-        self.sour_wave_freq(987)
-        self.sour_wave_offs(0)
-        self.sour_autorange(True)
-        self.sour_fixwaverange(True)
-        self.sour_wave_duration(10)
-
+    # def testDC(self):
+    #     self.sour_dc()
+    #     self.sour_rng(1e-3)
+    #     self.sour_comp(5e-1)
+    #     self.sour_curr(1e-5)
+    #     self.sour_outp(True)
+    #
+    # def testACPLS(self):
+    #     self._reset()
+    #     self.sour_wave()
+    #     self.sour_comp(1e-1)
+    #     self.sour_wave_amp(1e-5)
+    #     self.sour_wave_freq(987)
+    #     self.sour_wave_offs(0)
+    #     self.sour_autorange(True)
+    #     self.sour_fixwaverange(True)
+    #     self.sour_wave_duration(10)
+    #
     def arm_init_ACPLS(self):
         self._send(':SOUR:WAVE:ARM; :SOUR:WAVE:INIT')
 
@@ -480,3 +483,96 @@ class InstClass_K6221():
         self.sour_fixwaverange(waverngm)
         self.sour_wave_duration(dur)
         self.arm_init_ACPLS()
+
+
+class InstClass_K2400():
+    """Controller for the older sources... Should be pretty simple!"""
+
+    def __init__(self, inst):
+        # Init via rm.open_resource
+        self.instrument = rm.open_resource(inst)
+        self.instrument.write('*RST')
+
+    def _close(self):
+        # Close via rm.open_resource
+        self._reset()
+        self.instrument.close()
+
+    def _reset(self):
+        # Send reset command method.
+        self._send('*RST')
+
+    def _send(self, command: str):
+        # Send command method.
+        self.instrument.write(command)
+
+    def _read(self):
+        # Read method.
+        return self.instrument.read()
+
+    def _query(self, command):
+        return self.instrument.query(command)
+
+    ############################################### Taken from K2612B
+    def meas_V(self, channel_str: str):
+        self._send('display.smu' + '.measure.func=display.MEASURE_DCVOLTS')
+
+    def meas_I(self, channel_str: str):
+        self._send('display.smu' + '.measure.func=display.MEASURE_DCAMPS')
+
+    def meas_range_VOLTS(self, channel_str: str):
+        self._send('smu' + '.measure.autorangev=1')
+
+    def meas_range_AMPS(self, channel_str: str):
+        self._send('smu' + '.measure.autorangei=1')
+
+    def src_range_AMPS(self, channel_str: str, range: str):
+        self._send('smu' + '.source.rangei=' + range)
+
+    def src_range_VOLTS(self, channel_str: str, range: str):
+        self._send('smu' + '.source.rangev=' + range)
+
+    def src_level_AMPS(self, channel_str: str, level: str):
+        self._send('smu' + '.source.leveli=' + level)
+
+    def src_level_VOLTS(self, channel_str: str, level: str):
+        self._send('smu' + '.source.levelv=' + level)
+
+    def src_limit_AMPS(self, channel_str: str, limit: str):
+        self._send('smu' + '.source.limiti=' + limit)
+
+    def src_limit_VOLTS(self, channel_str: str, limit: str):
+        self._send('smu' + '.source.limitv=' + limit)
+
+    def sense_range_AMPS(self, channel_str: str, rng: str):
+        self._send('smu' + '.measure.rangei=' + rng)
+
+    def sense_range_VOLTS(self, channel_str: str, rng: str):
+        self._send('smu' + '.measure.rangev=' + rng)
+
+    def outp_ON(self, channel_str: str):
+        self._send(':OUTP ON;')
+
+    def outp_OFF(self, channel_str: str):
+        self._send('smu' + '.source.output=0')
+
+    def get_limit_I(self, channel_str: str):
+        return self._query('smu' + '.source.limiti')
+
+    def get_limit_V(self, channel_str: str):
+        return self._query('smu' + '.source.limitv')
+
+    def get_range_I(self, channel_str: str):
+        return self._query('smu' + '.source.rangei')
+
+    def get_range_V(self, channel_str: str):
+        return self._query('smu' + '.source.rangev')
+
+    def get_level_I(self, channel_str: str):
+        return self._query('smu' + '.source.leveli')
+
+    def get_level_V(self, channel_str: str):
+        return self._query('smu' + '.source.levelv')
+
+    def get_SRC(self, channel_str: str):
+        return self._query('smu' + '.source.func')

@@ -1,10 +1,7 @@
 import os
-# import tkinter as tk
 import time
 import tkinter.messagebox
-
 from PIL import ImageTk, Image
-
 from mylibs.InstSelect import *
 from mylibs.MeasFrame import *
 from mylibs.Observer import *
@@ -18,7 +15,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
-        # Attributes
+        # Attribute initialization
         self.k2612B_instrument = None  # pyvisa resourcemanager k2612B_instrument controller
         self.k6221_instrument = None  # pyvisa resourcemanager k2612B_instrument controller
         self.k2182A_instrument = None  # pyvisa resourcemanager k2612B_instrument controller
@@ -48,63 +45,68 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         self.title('EPNM - Testing Workstation')
         self.configure(background='black')
 
-        #    ---------------------------------------
-        #   |                                       |
-        #   |              Frame1                   |
-        #   |                                       |
-        #   |---------------------------------------|
-        #   |                                       |
-        #   |                                       |
-        #   |                                       |
-        #   |                                       |
-        #   |                                       |
-        #   |                                       |
-        #   |              Frame2                   |
-        #   |                                       |
-        #   |                                       |
-        #   |                                       |
-        #   |                                       |
-        #   |                                       |
-        #   |                                       |
-        #   |                                       |
-        #   |                                       |
-        #   |---------------------------------------|
-        #   |                                       |
-        #   |              Frame3                   |
-        #   |                                       |
-        #    ---------------------------------------
+        #    -------------------------------------------------------------------------------------------------------
+        #   |                                                                                                       |
+        #   |              Frame1:   Title, overview, start and edit button.                                        |
+        #   |                                                                                                       |
+        #   |-------------------------------------------------------------------------------------------------------|
+        #   |                                                                                                       |
+        #   |                                                                                                       |
+        #   |                                                                                                       |
+        #   |                                                                                                       |
+        #   |                                                                                                       |
+        #   |                                                                                                       |
+        #   |              Frame2:    Holds the active class being used.                                            |
+        #   |                                                                                                       |
+        #   |                                                                                                       |
+        #   |                                                                                                       |
+        #   |                                                                                                       |
+        #   |                                                                                                       |
+        #   |                                                                                                       |
+        #   |                                                                                                       |
+        #   |                                                                                                       |
+        #   |-------------------------------------------------------------------------------------------------------|
+        #   |                                                                                                       |
+        #   |              Frame3:    Holds the indicators                                                          |
+        #   |                                                                                                       |
+        #    -------------------------------------------------------------------------------------------------------
 
+        # -----------------------------------------------------------------------------------------------------------
         # Frame 1
         # Will have top banner as well as start and stop buttons
-        self.top_frame = NewFrame(self, self.width, self.pane_height * 1.2)  # Inherits tk.Frame, see gui_frames
-        self.top_frame.pack_propagate(0)
+        self.top_frame = NewFrame(self, self.width, self.pane_height * 1.2)  # NewFrame inherits tk.Frame,
+        # see gui_frames for details
+        self.top_frame.pack_propagate(0)  # stops deformation of parent frames by child frames
         self.top_frame.pack(side='top', fill='x')
         self._decorateTopFrame(self.top_frame)  # Decorating method, draws logo, title label
         # and creates the start and stop buttons, see methods below
+        # -----------------------------------------------------------------------------------------------------------
 
         # Frame 2
         # Will have several pages to hold the different measurement setups
         self.mid_frame = NewFrame(self, self.width, 4 * self.pane_height)
-        self.mid_frame.pack_propagate(0)  # Is 4x taller than other frames,
+        self.mid_frame.pack_propagate(0)
         # to hold most controls and indicators
         self.mid_frame.pack(side='top', fill='x')
+        # controller set up!
+        # All control panes (InstCont_XXXX) are instanced below and are always held in memory.
+        # Selecting one of the measurements in the GUI pulls one of the InstCont frames to front.
         container = self.mid_frame  # got this logic from stackoverflow,
         # essentially all frames that are shown in the middle get created below
         # and are later only raised to top on demand with _showFrame
+        # packing the frame:
         container.pack(side="top", fill="both")
         container.grid_rowconfigure(0, weight=1)  # It is necessary to give weight to the grid cells for this to work.
         container.grid_columnconfigure(0, weight=1)
+        # create dict to hold the instances we will create
         self.mid_subframes = {}
-        for F in (Blank, InstCont_K2612B, InstCont_K2612BandK2182A, InstCont_K6221andK2182A
-                # , R_t_Measurement, I_V_Measurement,
-                # , Pulse_Series_Measurement
-                  ):  # Classes are defined elsewhere
-            # print(F)
+        for F in (Blank, InstCont_K2612B, InstCont_K2612BandK2182A, InstCont_K6221andK2182A):
+            # Classes are defined in InstCont
             frame = F(container, self)
             frame.grid(row=0, column=0, sticky="nsew")
             self.mid_subframes[F] = frame
         self._showFrame(Blank)
-        # self._showFrame(Pulse_Series_Measurement)
+        # -----------------------------------------------------------------------------------------------------------
 
         # Frame 3
         # Will have a savefile, execution time and k2612B_instrument connection indicator
@@ -112,6 +114,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         self.bot_frame.pack_propagate(0)
         self.bot_frame.pack(side='top', fill='x')
         self._decorateBotFrame(self.bot_frame)
+        # -----------------------------------------------------------------------------------------------------------
 
         # Updating method for time fOand k2612B_instrument indicator for the first time
         self.observer.subscribe(self._time, 2)
@@ -130,17 +133,12 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
     def _update(self):
         # method to update execute all subscribers, recursively calls itself
         if self.runtime - self.time3 > .5:  # self.observer.call_subscribers(0) is executed twice per second.
-            # see observer
             self.time3 = self.runtime
             self.observer.call_subscribers(0)
-            # print(self.observer.dict)
-        elif self.runtime - self.time2 > .025:  # self.observer.call_subscribers(1) is executed a dozen times per
-            # second. 
-            # see observer
+        elif self.runtime - self.time2 > .025:  # self.observer.call_subscribers(1) is executed a 40 tmes per second.
             self.time2 = self.runtime
             self.observer.call_subscribers(1)
         self.observer.call_subscribers(2)  # self.observer.call_subscribers(2) is executed every loop.
-        # self.observer.call_subscribers(2)  is therefore the greatest risk
         self.after(1, self._update)
 
     #
@@ -160,7 +158,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
     def _startUp(self):
         # Start Button method. Creates the InstSelect frame whose invocation calls inst_seek() from rm_setup.
         # In order for instruments to show up user must have access to the usb drives of the PC - on linux,
-        # main must be run as superuser. Didn't test on windows yet.
+        # main must be run as superuser. On windows administrator privileges could be needed.
         frame = InstSelect(self.mid_frame, self)
         frame.grid(row=0, column=0, sticky="nsew")
         self.mid_subframes[InstSelect] = frame
@@ -169,14 +167,14 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         self._editButton(self.top_frame, 'se')
 
     def _editInstrument(self):
-        # Edit Button method. Closes the k2612B_instrument via _closeInstrument, destroys the InstSelect frame in Frame 2,
-        # and then recreates it to allow renewed connection to the k2612B_instrument.
-        self._closeInstrument(self.k2612B_instrument)
-        self.k2612B_instrument = None
-        self._closeInstrument(self.k6221_instrument)
-        self.k6221_instrument = None
-        self._closeInstrument(self.k2182A_instrument)
-        self.k2182A_instrument = None
+        # Edit Button method. Closes the k2612B_instrument via _closeInstrument,
+        # destroys the InstSelect frame in Frame 2,
+        # and then recreates it to allow renewed connection to the instruments.
+        for instrument in [self.k2612B_instrument, self.k6221_instrument, self.k2182A_instrument]:
+            if instrument is None:
+                pass
+            else:
+                self._closeInstrument(instrument)
         self.mid_subframes[InstSelect].destroy()
         frame = InstSelect(self.mid_frame, self)
         frame.grid(row=0, column=0, sticky="nsew")
@@ -232,7 +230,8 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         self.bottom_time_label.pack(side='top')
 
         # Create a bool indicator for k2612B_instrument connection.
-        self.instrument_bool_indicator_canvas_k2612B = tk.Canvas(bot2, width=self.pane_height / 2, height=self.pane_height / 2,
+        self.instrument_bool_indicator_canvas_k2612B = tk.Canvas(bot2, width=self.pane_height / 2,
+                                                                 height=self.pane_height / 2,
                                                                  bg='black', bd=0, highlightthickness=0)
         self.instrument_bool_indicator_canvas_k2612B.pack(side='right')
         self.instrument_bool_indicator_canvas_k2612B.bool_indicator = self.instrument_bool_indicator_canvas_k2612B.create_oval(
@@ -244,8 +243,9 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         self.instrument_bool_indicator_label_k2612B.pack(side='right')
 
         # Create a bool indicator for k6221 connection.
-        self.instrument_bool_indicator_canvas_k6221 = tk.Canvas(bot2, width=self.pane_height / 2, height=self.pane_height / 2,
-                                                                 bg='black', bd=0, highlightthickness=0)
+        self.instrument_bool_indicator_canvas_k6221 = tk.Canvas(bot2, width=self.pane_height / 2,
+                                                                height=self.pane_height / 2,
+                                                                bg='black', bd=0, highlightthickness=0)
         self.instrument_bool_indicator_canvas_k6221.pack(side='right')
         self.instrument_bool_indicator_canvas_k6221.bool_indicator = self.instrument_bool_indicator_canvas_k6221.create_oval(
             int(1 / 3 * 1 / 2 * self.pane_height), int(1 / 3 * 1 / 2 * self.pane_height),
@@ -256,7 +256,8 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         self.instrument_bool_indicator_label_k6221.pack(side='right')
 
         # Create a bool indicator for k2182A connection.
-        self.instrument_bool_indicator_canvas_k2182A = tk.Canvas(bot2, width=self.pane_height / 2, height=self.pane_height / 2,
+        self.instrument_bool_indicator_canvas_k2182A = tk.Canvas(bot2, width=self.pane_height / 2,
+                                                                 height=self.pane_height / 2,
                                                                  bg='black', bd=0, highlightthickness=0)
         self.instrument_bool_indicator_canvas_k2182A.pack(side='right')
         self.instrument_bool_indicator_canvas_k2182A.bool_indicator = self.instrument_bool_indicator_canvas_k2182A.create_oval(
@@ -278,27 +279,33 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
 
         # Set the k2612B_instrument bool indicator color.
         if self.k2612B_instrument is None:
-            self.instrument_bool_indicator_canvas_k2612B.itemconfig(self.instrument_bool_indicator_canvas_k2612B.bool_indicator,
-                                                                    fill="gray")
+            self.instrument_bool_indicator_canvas_k2612B.itemconfig(
+                self.instrument_bool_indicator_canvas_k2612B.bool_indicator,
+                fill="gray")
         else:
-            self.instrument_bool_indicator_canvas_k2612B.itemconfig(self.instrument_bool_indicator_canvas_k2612B.bool_indicator,
-                                                                    fill="green")
+            self.instrument_bool_indicator_canvas_k2612B.itemconfig(
+                self.instrument_bool_indicator_canvas_k2612B.bool_indicator,
+                fill="green")
 
         # Set the k6221 bool indicator color.
         if self.k6221_instrument is None:
-            self.instrument_bool_indicator_canvas_k6221.itemconfig(self.instrument_bool_indicator_canvas_k6221.bool_indicator,
-                                                                    fill="gray")
+            self.instrument_bool_indicator_canvas_k6221.itemconfig(
+                self.instrument_bool_indicator_canvas_k6221.bool_indicator,
+                fill="gray")
         else:
-            self.instrument_bool_indicator_canvas_k6221.itemconfig(self.instrument_bool_indicator_canvas_k6221.bool_indicator,
-                                                                    fill="green")
+            self.instrument_bool_indicator_canvas_k6221.itemconfig(
+                self.instrument_bool_indicator_canvas_k6221.bool_indicator,
+                fill="green")
 
         # Set the k2182A_instrument bool indicator color.
         if self.k2182A_instrument is None:
-            self.instrument_bool_indicator_canvas_k2182A.itemconfig(self.instrument_bool_indicator_canvas_k2182A.bool_indicator,
-                                                                    fill="gray")
+            self.instrument_bool_indicator_canvas_k2182A.itemconfig(
+                self.instrument_bool_indicator_canvas_k2182A.bool_indicator,
+                fill="gray")
         else:
-            self.instrument_bool_indicator_canvas_k2182A.itemconfig(self.instrument_bool_indicator_canvas_k2182A.bool_indicator,
-                                                                    fill="green")
+            self.instrument_bool_indicator_canvas_k2182A.itemconfig(
+                self.instrument_bool_indicator_canvas_k2182A.bool_indicator,
+                fill="green")
 
             fill = 'blue' if self.complianceA else 'gray'
             frame = self.mid_subframes[InstCont_K2612B]
@@ -366,14 +373,12 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         self.k6221_instrument = InstClass_K6221(inlist[lbox.curselection()[0]])
         # self.observer.subscribe(self._checkCompliance_K6221, 0) # EDIT THIS
 
-    def _closeInstrument(self,instrument):
+    def _closeInstrument(self, instrument):
         # Closes the k2612B_instrument connection, if it exists.
         if instrument is None:
             pass
         else:
             instrument._close()
-
-
 
     def configSMU(self, what, value, chan):
         # Config k2612B_instrument method called by various tk.OptionMenus in the InstCont_K2612B frame of Frame 2. See Schematic.
@@ -425,7 +430,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
                 except:
                     print('Bad Input')
 
-    def commandK6221(self,what,val):
+    def commandK6221(self, what, val):
         if self.k6221_instrument is None:
             pass
         else:
@@ -444,7 +449,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
                 except:
                     print('Bad Input')
 
-    def commandK2182A(self,what,val):
+    def commandK2182A(self, what, val):
         if self.k2182A_instrument is None:
             pass
         else:
@@ -475,7 +480,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
     #     self.complianceB = True if self.k2612B_instrument._query('smub.source.compliance') == 'true' else False
     #     # print(self.complianceB)
 
-    def _checkConditions_k2612B(self,frame):
+    def _checkConditions_k2612B(self, frame):
         if self.filedir is None:
             tk.messagebox.showwarning('ERROR: No SAVEDIR', 'Please select a saving directory first.')
             return False
@@ -491,10 +496,10 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
 
     def startMeasurement(self, float):
         print(self.filedir)
-        if float=='Rt' or float == 'PLS':
-            cond=self._checkConditions_k2612B(InstCont_K2612B)
+        if float == 'Rt' or float == 'PLS':
+            cond = self._checkConditions_k2612B(InstCont_K2612B)
         elif float == 'Rt_nvm' or float == 'PLS_nvm':
-            cond=self._checkConditions_k2612B(InstCont_K2612BandK2182A)
+            cond = self._checkConditions_k2612B(InstCont_K2612BandK2182A)
 
         if cond:
             if float == 'Rt':
@@ -538,7 +543,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
             string += str(time.localtime()[i])
             string += '-'
         # self.file_obj = open(fp + '/' + string + suffix + '.csv', mode='x')
-        self.file_obj = open(os.path.join(fp, f'{string+suffix}.csv'), mode='x')
+        self.file_obj = open(os.path.join(fp, f'{string + suffix}.csv'), mode='x')
 
     def _writeLineToFile(self, line):
         self.file_obj.write(line + '\n')

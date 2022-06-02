@@ -2,17 +2,19 @@ from re import split  # We need to process some regular expressions so I'll need
 
 from gpib_ctypes import make_default_gpib
 
-make_default_gpib() # Comment for NI drivers (Windows)
+make_default_gpib()  # Comment for NI drivers (Windows)
 
 import pyvisa  # Controls instruments via the VISA protocol
 
-#We create a resourcemanager instance as rm that we use throughout the pyvisa k2612B_instrument control.
+# We create a resourcemanager instance as rm that we use throughout the pyvisa k2612B_instrument control.
 rm = pyvisa.ResourceManager('@py')  # FOSS pyvisa driver
+
+
 # rm = pyvisa.ResourceManager('@ivi')  # ni-visa pyvisa driver
 # rm = pyvisa.ResourceManager()  # default, I think the ni-visa pyvisa driver
 
 
-#rm = pyvisa.ResourceManager('C:\\Windows\\sysWOW64\\visa32.dll') # NI driver (windows)
+# rm = pyvisa.ResourceManager('C:\\Windows\\sysWOW64\\visa32.dll') # NI driver (windows)
 
 
 def inst_seek():
@@ -27,11 +29,8 @@ def inst_seek():
             inst.write('*IDN?')
             response = inst.read()
             insts[response] = instrument
-
-            print(f'\\n'
-                  f'            Hello, I am: {response}.\n'
-                  f'            My address is: {instrument}  !\\n')
-
+            print(f'............Hello, I am: {response}.\n'
+                  f'............My address is: {instrument}!\n')
         except:
             print(f'Failed at address: {instrument}')  # Prints a little notification if it fails at any
             # available address.
@@ -132,18 +131,6 @@ class InstClass_K2612B():
         else:
             print('Valid channels are "a" and "b". ')
 
-    def meas_range_VOLTS(self, channel_str: str):
-        if channel_str in ['a', 'b']:
-            self._send('smu' + channel_str + '.measure.autorangev=1')
-        else:
-            print('Valid channels are "a" and "b". ')
-
-    def meas_range_AMPS(self, channel_str: str):
-        if channel_str in ['a', 'b']:
-            self._send('smu' + channel_str + '.measure.autorangei=1')
-        else:
-            print('Valid channels are "a" and "b". ')
-
     def src_range_AMPS(self, channel_str: str, range: str):
         if channel_str in ['a', 'b']:
             self._send('smu' + channel_str + '.source.rangei=' + range)
@@ -189,6 +176,18 @@ class InstClass_K2612B():
     def sense_range_VOLTS(self, channel_str: str, rng: str):
         if channel_str in ['a', 'b']:
             self._send('smu' + channel_str + '.measure.rangev=' + rng)
+        else:
+            print('Valid channels are "a" and "b". ')
+
+    def sense_autorange_VOLTS(self, channel_str: str):
+        if channel_str in ['a', 'b']:
+            self._send('smu' + channel_str + '.measure.autorangev=1')
+        else:
+            print('Valid channels are "a" and "b". ')
+
+    def sense_autorange_AMPS(self, channel_str: str):
+        if channel_str in ['a', 'b']:
+            self._send('smu' + channel_str + '.measure.autorangei=1')
         else:
             print('Valid channels are "a" and "b". ')
 
@@ -337,29 +336,29 @@ class InstClass_K2182A():
         return ans
         # return self.instrument.query(command)
 
-    def read_channel(self, chan):
+    def measure_channel(self, chan):
         if chan == 1 or chan == 2:
             return self._query(f':SENS:CHAN {str(chan)}; :SENS:FUNC "VOLT"; :INIT:CONT ON; :SENS:DATA:FRES?')
         else:
             print('Bad Channel!')
 
     def read_both(self):
-        return self.read_channel(1), self.read_channel(2)
+        return self.measure_channel(1), self.measure_channel(2)
 
-    def set_range(self, chan, rng):
+    def sense_range_VOLTS(self, chan, rng):
         if chan == 1 or chan == 2:
             self._send(f':SENS:CHAN {str(chan)}; :SENS:VOLT:RANG {format(rng, ".8E")}')
         else:
             print('Bad Channel!')
 
-    def set_digits(self, chan, dig):
+    def sense_digits(self, chan, dig):
         # dig between 4 and 8
         if chan == 1 or chan == 2:
             self._send(f':SENS:CHAN {str(chan)}; :SENS:VOLT:DIG {str(dig)}')
         else:
             print('Bad Channel!')
 
-    def set_rate(self, chan, nplc):
+    def sense_rate(self, chan, nplc):
         # nplc between 0.1 (fast) to 5 (slow)
         if chan == 1 or chan == 2:
             self._send(f':SENS:CHAN {str(chan)}; :SENS:VOLT:NPLC {str(nplc)}')
@@ -370,6 +369,16 @@ class InstClass_K2182A():
         if chan == 1 or chan == 2:
             self._send(
                 f':SENS:CHAN {str(chan)}; :SENS:VOLT:RANG {format(rng, ".8E")}; :SENS:VOLT:DIG {str(dig)}; :SENS:VOLT:NPLC {str(nplc)}')
+
+    # Not needed yet...
+    def get_range_V(self):
+        pass
+
+    def get_digits(self):
+        pass
+
+    def get_rate(self):
+        pass
 
 
 class InstClass_K6221():
@@ -400,71 +409,71 @@ class InstClass_K6221():
     def _query(self, command):
         return self.instrument.query(command)
 
-    def sour_wave(self):
+    def src_wave_SIN(self):
         self._send(':SOUR:WAVE:FUNC SIN;')  # can also be square etc
 
-    def sour_wave_amp(self, amp):
+    def src_wave_amp_AMPS(self, amp):
         self._send(f':SOUR:WAVE:AMPL {format(amp, ".6E")};')
 
-    def sour_wave_freq(self, freq):
+    def src_wave_freq_HERZ(self, freq):
         self._send(f':SOUR:WAVE:FREQ {format(freq, ".6E")};')
 
-    def sour_wave_offs(self, offs):
+    def src_wave_offs_DEG(self, offs):
         self._send(f':SOUR:WAVE:OFFS {format(offs, ".6E")};')
 
-    def sour_wave_duration(self, duration):
+    def src_wave_duration_SECS(self, duration):
         self._send(f':SOUR:WAVE:DUR:TIME {format(duration, ".6E")};')
 
-    def sour_fixwaverange(self, boolean_switch: bool):
+    def src_BestWaverange_BOOL(self, boolean_switch: bool):
         if boolean_switch is True:
             self._send(':SOUR:WAVE:RANG BEST;')
         elif boolean_switch is False:
             self._send(':SOUR:WAVE:RANG FIXED;')
 
-    def sour_comp(self, comp: str):
+    def src_limit_VOLTS(self, comp: str):
         self._send(f':SOUR:CURR:COMP {format(comp, ".6E")};')  # format to 1.000000E-1 VOLTS
 
-    def sour_curr(self, curr: str):
+    def src_level_AMPS(self, curr: str):
         self._send(f':SOUR:CURR {format(curr, ".6E")};')
 
-    def sour_rng(self, rng: str):
+    def src_range_AMPS(self, rng: str):
         self._send(f':SOUR:CURR:RANG {format(rng, ".6E")};')
 
-    def sour_autorange(self, boolean_switch: bool):
+    def src_autorange_AMPS(self, boolean_switch: bool):
         if boolean_switch is True:
             self._send(':SOUR:CURR:RANG:AUTO ON;')
         elif boolean_switch is False:
             self._send(':SOUR:CURR:RANG:AUTO OFF;')
 
-    def sour_outp(self, boolean_switcher: bool):
+    def outp_ON(self, boolean_switcher: bool):
         if boolean_switcher is True:
             self._send(':OUTP ON;')
         elif boolean_switcher is False:
             self._send(':OUTP OFF;')
 
-    def sour_dc(self):
+    def src_DC(self):
         self._reset()
         self._send('CLE')
-        self.sour_autorange(True)
-        self.sour_comp(0.1)
+        self.src_autorange_AMPS(True)
+        self.src_limit_VOLTS(0.1)
 
     # def testDC(self):
-    #     self.sour_dc()
-    #     self.sour_rng(1e-3)
-    #     self.sour_comp(5e-1)
-    #     self.sour_curr(1e-5)
-    #     self.sour_outp(True)
+    #     self.src_DC()
+    #     self.src_range_AMPS(1e-3)
+    #     self.src_limit_VOLTS(5e-1)
+    #     self.src_level_AMPS(1e-5)
+    #     self.outp_ON(True)
     #
     # def testACPLS(self):
     #     self._reset()
-    #     self.sour_wave()
-    #     self.sour_comp(1e-1)
-    #     self.sour_wave_amp(1e-5)
-    #     self.sour_wave_freq(987)
-    #     self.sour_wave_offs(0)
-    #     self.sour_autorange(True)
-    #     self.sour_fixwaverange(True)
-    #     self.sour_wave_duration(10)
+    #     self.src_wave_SIN()
+    #     self.src_limit_VOLTS(1e-1)
+    #     self.src_wave_amp_AMPS(1e-5)
+    #     self.src_wave_freq_HERZ(987)
+    #     self.src_wave_offs_DEG(0)
+    #     self.src_autorange_AMPS(True)
+    #     self.src_BestWaverange_BOOL(True)
+    #     self.src_wave_duration_SECS(10)
     #
     def arm_init_ACPLS(self):
         self._send(':SOUR:WAVE:ARM; :SOUR:WAVE:INIT')
@@ -474,14 +483,14 @@ class InstClass_K6221():
 
     def performACPLS(self, comp, amp, freq, offs, autorng, waverngm, dur):
         self._reset()
-        self.sour_wave()
-        self.sour_comp(comp)
-        self.sour_wave_amp(amp)
-        self.sour_wave_freq(freq)
-        self.sour_wave_offs(offs)
-        self.sour_autorange(autorng)
-        self.sour_fixwaverange(waverngm)
-        self.sour_wave_duration(dur)
+        self.src_wave_SIN()
+        self.src_limit_VOLTS(comp)
+        self.src_wave_amp_AMPS(amp)
+        self.src_wave_freq_HERZ(freq)
+        self.src_wave_offs_DEG(offs)
+        self.src_autorange_AMPS(autorng)
+        self.src_BestWaverange_BOOL(waverngm)
+        self.src_wave_duration_SECS(dur)
         self.arm_init_ACPLS()
 
 
@@ -511,68 +520,153 @@ class InstClass_K2400():
         return self.instrument.read()
 
     def _query(self, command):
-        return self.instrument.query(command)
+        r = split('[\n\t]', self.instrument.query(command))
+        r_el = [element for element in r if element != '']
+        if len(r_el) == 1:
+            ans = r_el[0]
+        else:
+            ans = r_el
+        return ans
 
-    ############################################### Taken from K2612B
-    def meas_V(self, channel_str: str):
-        self._send('display.smu' + '.measure.func=display.MEASURE_DCVOLTS')
+    # ############################################## Taken from K2612B
+    def meas_V(self, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        else:
+            self._send(':SENS:FUNC VOLT')
 
-    def meas_I(self, channel_str: str):
-        self._send('display.smu' + '.measure.func=display.MEASURE_DCAMPS')
+    def meas_I(self, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        else:
+            self._send(':SENS:FUNC CURR')
 
-    def meas_range_VOLTS(self, channel_str: str):
-        self._send('smu' + '.measure.autorangev=1')
+    def src_V(self, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        else:
+            self._send(':SOUR:FUNC VOLT')
 
-    def meas_range_AMPS(self, channel_str: str):
-        self._send('smu' + '.measure.autorangei=1')
+    def src_I(self, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        else:
+            self._send(':SOUR:FUNC CURR')
 
-    def src_range_AMPS(self, channel_str: str, range: str):
-        self._send('smu' + '.source.rangei=' + range)
+    def src_range_AMPS(self, rng: str, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        else:
+            self._send(f'SOUR:CURR:RANG {rng}')
 
-    def src_range_VOLTS(self, channel_str: str, range: str):
-        self._send('smu' + '.source.rangev=' + range)
+    def src_range_VOLTS(self, rng: str, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        else:
+            self._send(f'SOUR:VOLT:RANG {rng}')
 
-    def src_level_AMPS(self, channel_str: str, level: str):
-        self._send('smu' + '.source.leveli=' + level)
+    def src_level_AMPS(self, level: str, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        else:
+            self._send(f'SOUR:CURR {level}')
 
-    def src_level_VOLTS(self, channel_str: str, level: str):
-        self._send('smu' + '.source.levelv=' + level)
+    def src_level_VOLTS(self, level: str, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        else:
+            self._send(f':SOUR:VOLT {level}')
 
-    def src_limit_AMPS(self, channel_str: str, limit: str):
-        self._send('smu' + '.source.limiti=' + limit)
+    def src_limit_AMPS(self, limit: str, channel_str=None):
+        # if channel_str is not None:
+        #     return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        # else:
+        #     self._send('smu' + '.source.limiti=' + limit)
+        pass
 
-    def src_limit_VOLTS(self, channel_str: str, limit: str):
-        self._send('smu' + '.source.limitv=' + limit)
+    def src_limit_VOLTS(self, limit: str, channel_str=None):
+        # if channel_str is not None:
+        #     return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        # else:
+        #     self._send('smu' + '.source.limitv=' + limit)
+        pass
 
-    def sense_range_AMPS(self, channel_str: str, rng: str):
-        self._send('smu' + '.measure.rangei=' + rng)
+    def sense_range_AMPS(self, rng: str, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        else:
+            self._send(f':SOUR:CURR:RANG {rng}')
 
-    def sense_range_VOLTS(self, channel_str: str, rng: str):
-        self._send('smu' + '.measure.rangev=' + rng)
+    def sense_range_VOLTS(self, rng: str, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        else:
+            self._send(f':SOUR:VOLT:RANG {rng}')
 
-    def outp_ON(self, channel_str: str):
-        self._send(':OUTP ON;')
+    def sense_autorange_VOLTS(self, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        else:
+            self._send(f':SOUR:VOLT:RANG:AUTO ON')
 
-    def outp_OFF(self, channel_str: str):
-        self._send('smu' + '.source.output=0')
+    def sense_autorange_AMPS(self, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        else:
+            self._send(f':SOUR:CURR:RANG:AUTO ON')
 
-    def get_limit_I(self, channel_str: str):
-        return self._query('smu' + '.source.limiti')
+    def outp_ON(self, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        else:
+            self._send(':OUTP ON')
 
-    def get_limit_V(self, channel_str: str):
-        return self._query('smu' + '.source.limitv')
+    def outp_OFF(self, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        else:
+            self._send('OUTP OFF')
 
-    def get_range_I(self, channel_str: str):
-        return self._query('smu' + '.source.rangei')
+    def get_limit_I(self, channel_str=None):
+        # if channel_str is not None:
+        #     return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        # else:
+        #     return self._query('smu' + '.source.limiti')
+        pass
 
-    def get_range_V(self, channel_str: str):
-        return self._query('smu' + '.source.rangev')
+    def get_limit_V(self, channel_str=None):
+        # if channel_str is not None:
+        #     return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        # else:
+        #     return self._query('smu' + '.source.limitv')
+        pass
 
-    def get_level_I(self, channel_str: str):
-        return self._query('smu' + '.source.leveli')
+    def get_range_I(self, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        else:
+            return self._query(':SOUR:CURR:RANG?')
 
-    def get_level_V(self, channel_str: str):
-        return self._query('smu' + '.source.levelv')
+    def get_range_V(self, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        else:
+            return self._query(':SOUR:VOLT:RANG?')
 
-    def get_SRC(self, channel_str: str):
-        return self._query('smu' + '.source.func')
+    def get_level_I(self, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        else:
+            return self._query('SOUR:CURR?')
+
+    def get_level_V(self, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels.f You passed channel_str: {channel_str}'
+        else:
+            return self._query('SOUR:VOLT?')
+
+    def get_SRC(self, channel_str=None):
+        if channel_str is not None:
+            return f'This source does not have separate channels. You passed channel_str: {channel_str}'
+        else:
+            return self._query(':SOUR:FUNC?')

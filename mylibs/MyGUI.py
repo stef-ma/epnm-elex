@@ -392,7 +392,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
             elif what == 'MEAS' and value == 'I':
                 self.k2612B_instrument.meas_I(chan)
             elif what == 'MEAS' and value == 'V':
-                self.k2612B_instrument.meas_V(chan)
+                self.k2612B_instrument.measure_channel(chan)
             elif what == 'SENS' and value == '2-Point':
                 self.k2612B_instrument.sense_local(chan)
             elif what == 'SENS' and value == '4-Point':
@@ -441,9 +441,9 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
                     val_str = val.get()
                     val_float = float(val_str)
                     if what == 'Compliance':
-                        self.k6221_instrument.sour_comp(val_float)
+                        self.k6221_instrument.src_limit_VOLTS(val_float)
                     elif what == 'Range':
-                        self.k6221_instrument.sour_rng(val_float)
+                        self.k6221_instrument.src_range_AMPS(val_float)
                     elif what == 'Level':
                         self.k6221_instrument.sour_lvl(val_float)
                 except:
@@ -460,11 +460,11 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
                     val_str = val.get()
                     val_float = float(val_str)
                     if what == 'Rate':
-                        self.k6221_instrument.set_rate(val_float)
+                        self.k6221_instrument.sense_rate(val_float)
                     elif what == 'Range':
                         self.k6221_instrument.set_rng(val_float)
                     elif what == 'Digits':
-                        self.k6221_instrument.set_digits(val_str)
+                        self.k6221_instrument.sense_digits(val_str)
                 except:
                     print('Bad Input')
 

@@ -1,23 +1,11 @@
-# import matplotlib as mpl
-# from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-# from matplotlib.figure import Figure
-# import tkinter as tk
 from tkinter import ttk
-
-# from mylibs.RmSetup import *
-# from mylibs.BaseFrames import *
 from mylibs.InstCont import *
-
-# mpl.use("TkAgg")
-
-# import time
 
 LARGE_FONT = ("Cambria", 12)
 
-
 class InstSelect(NewFrame):
     """The Instrument Selection Frame. Uses rm_setup functions,
-    passes selected k2612B_instrument to root and allows entrance into Instrument Control."""
+    passes selected InstClass to root and allows entrance into Instrument Control."""
 
     def __init__(self, parent, controller):
         # Init the New_Frame

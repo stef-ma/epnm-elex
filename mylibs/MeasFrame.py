@@ -1203,10 +1203,10 @@ class R_t_Measurement_K6221andK2182A(Measurement):
                                                       float(contfr.digframe_K6221.entry_stringvar.get()),
                                                       float(contfr.ratframe_K6221.entry_stringvar.get()))
             smu_curr = float(self.params['PROBE'])
-            src.sour_dc()
-            src.sour_comp(float(contfr.compframe_K6221.entry_stringvar.get()))
-            src.sour_curr()
-            src.sour_rng(float(contfr.rngframe_K6221.entry_stringvar.get()))
+            src.src_DC()
+            src.src_limit_VOLTS(float(contfr.compframe_K6221.entry_stringvar.get()))
+            src.src_level_AMPS()
+            src.src_range_AMPS(float(contfr.rngframe_K6221.entry_stringvar.get()))
 
             self.iter += 1
             self.exp_time = self.controller.runtime
@@ -1241,10 +1241,10 @@ class R_t_Measurement_K6221andK2182A(Measurement):
                 self.exp_time = self.controller.runtime
 
     def _instContTurnOn(self):
-        self.controller.k6221_instrument.sour_outp(True)
+        self.controller.k6221_instrument.outp_ON(True)
 
     def _instContTurnOff(self):
-        self.controller.k6221_instrument.sour_outp(False)
+        self.controller.k6221_instrument.outp_ON(False)
 
     def _returnToInstCont(self):
         self._stopMeasurement()
@@ -1306,10 +1306,10 @@ class Pulse_Series_Measurement_K6221andK2182A(Measurement):
             self.canvas.flush_events()
 
     def _instContTurnOn(self):
-        self.controller.k6221_instrument.sour_outp(True)
+        self.controller.k6221_instrument.outp_ON(True)
 
     def _instContTurnOff(self):
-        self.controller.k6221_instrument.sour_outp(False)
+        self.controller.k6221_instrument.outp_ON(False)
 
     def _measure(self):
         inst = self.controller.k2612B_instrument
@@ -1327,10 +1327,10 @@ class Pulse_Series_Measurement_K6221andK2182A(Measurement):
                                                               float(contfr.digframe_K6221.entry_stringvar.get()),
                                                               float(contfr.ratframe_K6221.entry_stringvar.get()))
 
-                    src.sour_dc()
-                    src.sour_comp(float(contfr.compframe_K6221.entry_stringvar.get()))
-                    src.sour_curr()
-                    src.sour_rng(float(contfr.rngframe_K6221.entry_stringvar.get()))
+                    src.src_DC()
+                    src.src_limit_VOLTS(float(contfr.compframe_K6221.entry_stringvar.get()))
+                    src.src_level_AMPS()
+                    src.src_range_AMPS(float(contfr.rngframe_K6221.entry_stringvar.get()))
 
                     self.iter += 1
                     self.exp_time = self.controller.runtime

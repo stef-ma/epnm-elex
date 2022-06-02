@@ -1,10 +1,3 @@
-# import matplotlib as mpl
-# from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-# from matplotlib.figure import Figure
-# import tkinter as tk
-# from tkinter import ttk
-import time
-
 from mylibs.BaseFrames import *
 from mylibs.RmSetup import *
 
@@ -15,7 +8,7 @@ from mylibs.RmSetup import *
 LARGE_FONT = ("Cambria", 12)
 SMALL_FONT = ("Cambria", 3)
 
-
+# #### General tkinter windows for instrument control
 class InstCont_K2612B(tk.LabelFrame):
     """The Manual Instrument Control Frame."""
 
@@ -639,7 +632,7 @@ class InstCont_K6221andK2182A(tk.LabelFrame):
             pass
         else:
             # Output ON in channel!
-            self.controller.k6221_instrument.sour_outp(True)
+            self.controller.k6221_instrument.outp_ON(True)
             # Change to On button!
             self._switchButton('on')
 
@@ -648,7 +641,7 @@ class InstCont_K6221andK2182A(tk.LabelFrame):
             pass
         else:
             # Output OFF in channel!
-            self.controller.k6221_instrument.sour_outp(False)
+            self.controller.k6221_instrument.outp_ON(False)
             # Change to On button!
             self._switchButton('off')
 
@@ -674,6 +667,7 @@ class InstCont_K6221andK2182A(tk.LabelFrame):
                              command=lambda: self.waveAbort())
 
 
+# #### Frames to use as labeled windows for individual instrument controls. See above in respective InstCont for use.
 class EntryFrame_K6221(tk.LabelFrame):
     def __init__(self, parent, what, controller):
         # Init as LabelFrame for more efficient labelling
@@ -760,6 +754,7 @@ class EntryFrame_K2182A(tk.LabelFrame):
         self.read_out.pack(side='right')
 
 
+# ### General subframes used in constructing the tkinter windows...
 class ChannelSubframe(NewFrame):
     """chanX_Subframe inside InstCont_K2612B, contains configuration indicators and controls,
     in the form of Entries and OptionMenu objects from tk."""
@@ -809,7 +804,7 @@ class ChannelSubframe(NewFrame):
 
     def _makeVoltmeter(self, channel, controller):
         controller.k2612B_instrument.voltmeter(channel)
-        controller.k2612B_instrument.meas_range_VOLTS(channel)
+        controller.k2612B_instrument.sense_autorange_VOLTS(channel)
         self.volt_switch.configure(bg='green', command=lambda: self._makeSMU(channel, controller))
         self.comp.entry_stringvar.set('0.02')
         self.rang.entry_stringvar.set('0.000001')

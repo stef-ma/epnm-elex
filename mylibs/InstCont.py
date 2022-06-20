@@ -667,6 +667,213 @@ class InstCont_K6221andK2182A(tk.LabelFrame):
                              command=lambda: self.waveAbort())
 
 
+class InstCont_K2400andK2182A(tk.LabelFrame):
+    """The Manual Instrument Control Frame."""
+
+    def __init__(self, parent, controller):
+        # Start by initializing self as a tk.LabelFrame with the label 'Instrument Control'
+        tk.LabelFrame.__init__(self, parent, bg='black', fg='white', bd=5, padx=10, pady=10, text='Instrument Control',
+                               labelanchor='n')
+        self.configure(background='black')
+        # Set the controller as an attribute for easier handling.
+        self.controller = controller
+        self.instrument_SMU = self.controller.k2400_instrument
+        # Frames: OUTDATEDOUTDATEDOUTDATEDOUTDATEDOUTDATEDOUTDATEDOUTDATED
+        #   |----------------InstCont_K2612B---------------|OUTDATED
+        #   |               top_frame               |
+        #   |                   |                   |
+        #   |    chanA_Subframe | chanB_Subframe    |OUTDATED
+        #   |                   |                   |
+        #   |                   |                   |
+        #   |------------------ |-------------------|
+        #   |                                       |
+        #   |                                       |
+        #   |                                       |OUTDATED
+        #   |                                       |
+        #   |------------------ |------------------ |
+        #   |                bot_frame              |
+        #   |                   |                   |OUTDATED
+        #   | chanA_Measframe   |  chanB_Measframe  |
+        #   |                   |                   |
+        #   |------------------ |-------------------|OUTDATED
+        # The Frames are either instances of New_Frame (Subframe) of tk.LabelFrame (Measframe).
+        # Top Frames
+
+
+        ###### 20220520 working
+        chan_a = 'a'
+        chan_b= 'b'
+
+        top_frame = NewFrame(self, controller.width, 2 * controller.pane_height)
+        top_frame.pack_propagate(0)
+        top_frame.pack(side='top')
+
+        # We create extra labelframes for easier organizing. I have suffered greatly to figure this out. :c
+        lframeA = tk.LabelFrame(top_frame, width=controller.width / 5, height=controller.pane_height * 2, bg='black',
+                                fg='white', bd=4, padx=10, pady=2, text='ChA')
+        lframeA.pack_propagate(0)
+        lframeA.grid(row=0, column=0, padx=10)
+        # We init the subframes inside top_frame as instances of MeasurementAndOutputSubframe. See below.
+        self.chanA_Measframe = MeasurementAndOutputSubframe(lframeA, controller, chan_a, self)
+        self.chanA_Measframe.pack()
+
+        # We init the subframes inside top_frame as instances of Channel_Subframe. See below.
+        self.chanA_Subframe = ChannelSubframe(top_frame, chan_a, controller)
+        self.chanA_Subframe.grid(row=0, column=1, padx=10)
+
+        self.chanB_Subframe = ChannelSubframe(top_frame, chan_b, controller)
+        self.chanB_Subframe.grid(row=0, column=2, padx=10)
+
+        lframeB = tk.LabelFrame(top_frame, width=controller.width / 5, height=controller.pane_height * 2, bg='black',
+                                fg='white', bd=4, padx=10, pady=2, text='ChB')
+        lframeB.grid(row=0, column=3, padx=10)
+        lframeB.pack_propagate(0)
+        self.chanB_Measframe = MeasurementAndOutputSubframe(lframeB, controller, chan_b, self)
+        self.chanB_Measframe.pack()
+
+
+        ###### 20220520 stop
+
+        # Mid Frame
+        mid_frame = NewFrame(self, controller.width, controller.pane_height * 2)
+        mid_frame.pack_propagate(0)
+        mid_frame.pack(side='top')
+        self.measurement_switcher = MeasurementSwitcher(mid_frame, self, 'Rt_nvm', 'IV', 'PLS_nvm')
+        self.measurement_switcher.pack(fill='both', pady=2)
+        self.measurement_switcher.pack_propagate(0)
+
+        # Bot Frames
+        bot_frame = NewFrame(self, controller.width, controller.pane_height)
+        bot_frame.pack_propagate(0)
+        bot_frame.pack(side='bottom')
+
+        # make A middle frame for quick resistance readings
+        bot_mid_frame = NewFrame(bot_frame, controller.width / 3, controller.pane_height)
+        bot_mid_frame.grid(row=0, column=0)
+        bot_frame.grid_rowconfigure(0, weight=1)
+        bot_frame.grid_columnconfigure(0, weight=1)
+        bot_mid_frame.pack_propagate(0)
+        multimeter_frame = tk.LabelFrame(bot_mid_frame, width=controller.width / 3, height=controller.pane_height,
+                                         bg='black',
+                                         fg='white', bd=4, padx=2, pady=2, text='Ohmmeter')
+        multimeter_frame.pack(side='top', anchor='s', padx=2)
+        # multimeter_frame.pack_propagate(0)
+        self.multimeter_Measframe = MultimeterFrame(multimeter_frame, controller, self)
+        self.multimeter_Measframe.pack()
+
+        # comp_frame = NewFrame(bot_mid_frame, controller.width / 3, controller.pane_height / 2)
+        # comp_frame.pack_propagate(0)
+        # comp_frame.pack(side='bottom', padx=2, pady=2)
+
+        # self.chB_complianceWarning = ComplianceIndicator(comp_frame, self)
+        # self.chB_complianceWarning.pack(side='right')
+        # self.chB_complianceWarning.makeOval()
+        # self.chB_complianceWarning.makeText('ChB')
+
+    def readSettings(self):
+        # Reads the settings for a given channel and updates the respective disabled entries in
+        # chanX_Subframe via _updateControlFrame
+        func = self.instrument_SMU.get_SRC()
+        if int(float(func)) == 0:  # for I src
+            limit = self.instrument_SMU.get_limit_V()
+            rng = self.instrument_SMU.get_range_I()
+            level = self.instrument_SMU.get_level_I()
+        elif int(float(func)) == 1:  # for V src
+            limit = self.instrument_SMU.get_limit_I()
+            rng = self.instrument_SMU.get_range_V()
+            level = self.instrument_SMU.get_level_V()
+        else:  # For unexpected errors.
+            limit = 255
+            rng = 255
+            level = 255
+        self._updateControlFrame(chan, limit, rng, level, int(float(func)))
+
+    def _updateControlFrame(self, chan, limit, rng, level, func):
+        # Updates the respective disabled entries in chanX_Subframe
+        if func == 0 and chan == 'a':  # I src
+            comp_unit = 'V'
+            rng_unit = 'A'
+            lvl_unit = 'A'
+            self.chanA_Subframe.updateBlock(comp_unit, rng_unit, lvl_unit, limit, rng, level)
+        elif func == 1 and chan == 'a':  # V src
+            comp_unit = 'A'
+            rng_unit = 'V'
+            lvl_unit = 'V'
+            self.chanA_Subframe.updateBlock(comp_unit, rng_unit, lvl_unit, limit, rng, level)
+        elif func == 0 and chan == 'b':  # I src
+            comp_unit = 'V'
+            rng_unit = 'A'
+            lvl_unit = 'A'
+            self.chanB_Subframe.updateBlock(comp_unit, rng_unit, lvl_unit, limit, rng, level)
+        elif func == 1 and chan == 'b':  # V src
+            comp_unit = 'A'
+            rng_unit = 'V'
+            lvl_unit = 'V'
+            self.chanB_Subframe.updateBlock(comp_unit, rng_unit, lvl_unit, limit, rng, level)
+        else:
+            pass
+
+    def instContTurnOn(self, chan):
+        # Output ON in channel!
+        self.controller.k2612B_instrument.outp_ON(chan)
+        # Subscribe the updater if this is the first channel to get switched on.
+        if self.chanA is False and self.chanB is False:
+            self.controller.observer.subscribe(self._updateMeasurement, 1)
+        # Flip the measurement vars.
+        if chan == 'a':
+            self.chanA = True
+        elif chan == 'b':
+            self.chanB = True
+        # Change to Off button!
+        self._switchButton(chan, 'off')
+
+    def instContTurnOff(self, chan):
+        # Output OFF in channel!
+        self.controller.k2612B_instrument.outp_OFF(chan)
+        # Flip the measurement variable for channel.
+        if chan == 'a':
+            self.chanA = False
+            self.controller.complianceA = False
+        elif chan == 'b':
+            self.chanB = False
+            self.controller.complianceA = False
+        # If both are off, unsubscribe the measurement updater
+        if self.chanA is False and self.chanB is False:
+            self.controller.observer.unsubscribe(self._updateMeasurement)
+        # Change to On button!
+        self._switchButton(chan, 'on')
+
+    def _switchButton(self, chan, command):
+        # Changes the  OUTPUT button between ON and OFF mode.
+        if chan == 'a':
+            chan_str = 'ChA'
+            subframe = self.chanA_Measframe
+            subframe.switchCommand(chan, chan_str, command)
+        elif chan == 'b':
+            chan_str = 'ChB'
+            subframe = self.chanB_Measframe
+            subframe.switchCommand(chan, chan_str, command)
+
+    def _updateMeasurement(self):
+        # Updates the measurement indicators on InstCont_K2612B.
+        # Everything is written twice in case we are simultaneously measuring both channels.
+        if self.chanA:
+            # Get data
+            curr, volt = self.controller.k2612B_instrument.measure_channel('a')
+            # print('current is '+str(curr))
+            # print('voltage is '+str(volt))
+            # Set subframe
+            subframe = self.chanA_Measframe
+            subframe.readUpdate(curr, volt)
+            self.multimeter_Measframe.updateCallOut()
+
+        if self.chanB:
+            # Get data
+            curr, volt = self.controller.k2612B_instrument.measure_channel('b')
+            # Set subframe
+            subframe = self.chanB_Measframe
+            subframe.readUpdate(curr, volt)
+            self.multimeter_Measframe.updateCallOut()
 # #### Frames to use as labeled windows for individual instrument controls. See above in respective InstCont for use.
 class EntryFrame_K6221(tk.LabelFrame):
     def __init__(self, parent, what, controller):
@@ -679,7 +886,7 @@ class EntryFrame_K6221(tk.LabelFrame):
         self.entry = tk.Entry(self, textvariable=self.entry_stringvar)
         self.entry.pack(side='left')
         self.entry_stringvar.trace_add('write',
-                                       lambda a, b, c: self.controller.commandK6221(what, self.entry_stringvar))
+                                       lambda a, b, c: self.controller.controller_command_K6221(what, self.entry_stringvar))
         self.unit_stringvar = tk.StringVar(parent)
         if what == 'Compliance':
             unit = 'V'
@@ -707,7 +914,7 @@ class EntryFrame_K6221AC(tk.LabelFrame):
         self.entry = tk.Entry(self, textvariable=self.entry_stringvar)
         self.entry.pack(side='left')
         # self.entry_stringvar.trace_add('write',
-        #                                lambda a, b, c: self.controller.commandK6221(what,self.entry_stringvar))
+        #                                lambda a, b, c: self.controller.controller_command_K6221(what,self.entry_stringvar))
         self.unit_stringvar = tk.StringVar(parent)
         if what == 'Amplitude':
             unit = 'A[RMS]'
@@ -737,7 +944,7 @@ class EntryFrame_K2182A(tk.LabelFrame):
         self.entry = tk.Entry(self, textvariable=self.entry_stringvar)
         self.entry.pack(side='left')
         self.entry_stringvar.trace_add('write',
-                                       lambda a, b, c: self.controller.commandK2182A(what, self.entry_stringvar))
+                                       lambda a, b, c: self.controller.controller_command_K2182A(what, self.entry_stringvar))
         self.unit_stringvar = tk.StringVar(parent)
         if what == 'Rate':
             unit = 'NPLC'
@@ -861,8 +1068,8 @@ class InstContSubsEntries(tk.LabelFrame):
         self.entry = tk.Entry(self, textvariable=self.entry_stringvar)
         self.entry.pack(side='left')
         self.entry_stringvar.trace_add('write',
-                                       lambda a, b, c: self.controller.commandSMU(what, config_widget.get(), chan,
-                                                                                  self.entry_stringvar))
+                                       lambda a, b, c: self.controller.controller_command_K2612B(what, config_widget.get(), chan,
+                                                                                                 self.entry_stringvar))
         # Create the StringVar to hold the program output and create the user indicator.
         # Indicators are entries that are programmatically disabled so thay only read values.
         self.read_out_stringvar = tk.StringVar(self.controller)
@@ -886,7 +1093,7 @@ class InstContSubsMenus(tk.LabelFrame):
         self.info = tk.StringVar(self.controller)
         self.info.set(what)
         self.ddown = tk.OptionMenu(self, self.info, *options,
-                                   command=lambda x: self.controller.configSMU(what, self.info.get(), chan))
+                                   command=lambda x: self.controller.controller_config_K2612B(what, self.info.get(), chan))
         self.ddown.pack(side='bottom')
 
 
@@ -1035,7 +1242,7 @@ class MeasurementSwitcher(tk.LabelFrame):
         frame1.pack(side='left')
         # button
         self.measure_button_Rt = tk.Button(frame1, text='R(t)', bg='gray', fg='white',
-                                           command=lambda: self.controller.startMeasurement(string1))
+                                           command=lambda: self.controller.start_measurements_sourced_on_K2612B(string1))
         #
         self.measure_button_Rt.pack(pady=0)
         self.probe_current = MeasurementSwitcherSubsEntries(frame1, self.controller, 'Probe  (A or V): ')
@@ -1050,7 +1257,7 @@ class MeasurementSwitcher(tk.LabelFrame):
         frame2.pack(side='left', padx=20)
         # button
         self.measure_button_IV = tk.Button(frame2, text='I(V)', bg='gray', fg='white', state='disabled',
-                                           command=lambda: self.controller.startMeasurement(string2))
+                                           command=lambda: self.controller.start_measurements_sourced_on_K2612B(string2))
         #
         self.measure_button_IV.pack(pady=0)
         self.IV_start = MeasurementSwitcherSubsEntries(frame2, self.controller, ' Start (A): ')
@@ -1067,7 +1274,7 @@ class MeasurementSwitcher(tk.LabelFrame):
         frame3.pack(side='right')
         # button
         self.measure_button_PulseRt = tk.Button(frame3, text='Pulse Sequence', bg='gray', fg='white',
-                                                command=lambda: self.controller.startMeasurement(string3))
+                                                command=lambda: self.controller.start_measurements_sourced_on_K2612B(string3))
         #
         self.measure_button_PulseRt.pack(pady=0)
         self.pulsing_start = MeasurementSwitcherSubsEntries(frame3, self.controller, 'Pulsing start (A or V): ')

@@ -10,7 +10,7 @@ import pyvisa  # Controls instruments via the VISA protocol
 rm = pyvisa.ResourceManager('@py')  # FOSS pyvisa driver
 
 
-# rm = pyvisa.ResourceManager('@ivi')  # ni-visa pyvisa driver
+# rm = pyvisa.ResourceManager('@ivi')  # ni-visa pyvisa driver on my Linux (5.18.5-1-MANJARO)
 # rm = pyvisa.ResourceManager()  # default, I think the ni-visa pyvisa driver
 
 

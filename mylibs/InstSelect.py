@@ -42,13 +42,13 @@ class InstSelect(NewFrame):
         button4.pack(padx=10, pady=10, )
         # Create Switch to InstCont_K2612B button.
         button5 = ttk.Button(frame2, text="SETUP: K2612B SOLO",
-                            command=lambda: controller._showFrame(InstCont_K2612B))
+                             command=lambda: controller._show_frame(InstCont_K2612B))
         button5.pack(padx=10, pady=10, )
         button6 = ttk.Button(frame2, text="SETUP: K2612B + K2182A",
-                            command=lambda: controller._showFrame(InstCont_K2612BandK2182A))
+                             command=lambda: controller._show_frame(InstCont_K2612BandK2182A))
         button6.pack(padx=10, pady=10, )
 
         button7 = ttk.Button(frame2, text="SETUP: K6221 + K2182A",
-                            command=lambda: controller._showFrame(InstCont_K6221andK2182A))
+                             command=lambda: controller._show_frame(InstCont_K6221andK2182A))
         button7.pack(padx=10, pady=10, )
 

@@ -17,8 +17,9 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
 
         # Attribute initialization
         self.k2612B_instrument = None  # pyvisa resourcemanager k2612B_instrument controller
-        self.k6221_instrument = None  # pyvisa resourcemanager k2612B_instrument controller
-        self.k2182A_instrument = None  # pyvisa resourcemanager k2612B_instrument controller
+        self.k6221_instrument = None  # pyvisa resourcemanager k6221_instrument controller
+        self.k2182A_instrument = None  # pyvisa resourcemanager k2182A_instrument controller
+        self.k2400_instrument = None  # pyvisa resourcemanager k2400_instrument controller
         self.filedir = None  # savefile later turned to tkinter filedialog object, use .get() to read
         self.width = 1300  # for window geometry
         self.pane_height = 85  # for window geometry
@@ -78,7 +79,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         # see gui_frames for details
         self.top_frame.pack_propagate(0)  # stops deformation of parent frames by child frames
         self.top_frame.pack(side='top', fill='x')
-        self._decorateTopFrame(self.top_frame)  # Decorating method, draws logo, title label
+        self._decorate_top_frame(self.top_frame)  # Decorating method, draws logo, title label
         # and creates the start and stop buttons, see methods below
         # -----------------------------------------------------------------------------------------------------------
 
@@ -93,19 +94,24 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         # Selecting one of the measurements in the GUI pulls one of the InstCont frames to front.
         container = self.mid_frame  # got this logic from stackoverflow,
         # essentially all frames that are shown in the middle get created below
-        # and are later only raised to top on demand with _showFrame
+        # and are later only raised to top on demand with _show_frame
         # packing the frame:
         container.pack(side="top", fill="both")
         container.grid_rowconfigure(0, weight=1)  # It is necessary to give weight to the grid cells for this to work.
         container.grid_columnconfigure(0, weight=1)
         # create dict to hold the instances we will create
         self.mid_subframes = {}
-        for F in (Blank, InstCont_K2612B, InstCont_K2612BandK2182A, InstCont_K6221andK2182A):
+        for F in (Blank,
+                  InstCont_K2612B,
+                  InstCont_K2612BandK2182A,
+                  InstCont_K6221andK2182A,
+                  InstCont_K2400andK2182A
+                  ):
             # Classes are defined in InstCont
             frame = F(container, self)
             frame.grid(row=0, column=0, sticky="nsew")
             self.mid_subframes[F] = frame
-        self._showFrame(Blank)
+        self._show_frame(Blank)
         # -----------------------------------------------------------------------------------------------------------
 
         # Frame 3
@@ -113,12 +119,12 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         self.bot_frame = NewFrame(self, self.width, self.pane_height)
         self.bot_frame.pack_propagate(0)
         self.bot_frame.pack(side='top', fill='x')
-        self._decorateBotFrame(self.bot_frame)
+        self._decorate_bot_frame(self.bot_frame)
         # -----------------------------------------------------------------------------------------------------------
 
         # Updating method for time fOand k2612B_instrument indicator for the first time
         self.observer.subscribe(self._time, 2)
-        self.observer.subscribe(self._updateBottom, 0)
+        self.observer.subscribe(self._update_bottom, 0)
 
         self._update()  # Calls itself recursively to invoke the functions managed by the observer.
 
@@ -144,9 +150,12 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
     #
     #
 
-    def _safeExit(self):
+    def _safe_exit(self):
         # safe exit method with shutdown for the SMU!
-        for instrument in [self.k2612B_instrument, self.k6221_instrument, self.k2182A_instrument]:
+        for instrument in [self.k2612B_instrument,
+                           self.k6221_instrument,
+                           self.k2182A_instrument,
+                           self.k2400_instrument]:
             if instrument is None:
                 pass
             else:
@@ -155,22 +164,25 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
             self.file_obj.close()
         self.destroy()
 
-    def _startUp(self):
+    def _startup(self):
         # Start Button method. Creates the InstSelect frame whose invocation calls inst_seek() from rm_setup.
         # In order for instruments to show up user must have access to the usb drives of the PC - on linux,
         # main must be run as superuser. On windows administrator privileges could be needed.
         frame = InstSelect(self.mid_frame, self)
         frame.grid(row=0, column=0, sticky="nsew")
         self.mid_subframes[InstSelect] = frame
-        self._showFrame(InstSelect)
+        self._show_frame(InstSelect)
         self.start_button.destroy()
-        self._editButton(self.top_frame, 'se')
+        self._edit_button(self.top_frame, 'se')
 
-    def _editInstrument(self):
+    def _edit_instrument(self):
         # Edit Button method. Closes the k2612B_instrument via _closeInstrument,
         # destroys the InstSelect frame in Frame 2,
         # and then recreates it to allow renewed connection to the instruments.
-        for instrument in [self.k2612B_instrument, self.k6221_instrument, self.k2182A_instrument]:
+        for instrument in [self.k2612B_instrument,
+                           self.k6221_instrument,
+                           self.k2182A_instrument,
+                           self.k2400_instrument]:
             if instrument is None:
                 pass
             else:
@@ -179,14 +191,14 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         frame = InstSelect(self.mid_frame, self)
         frame.grid(row=0, column=0, sticky="nsew")
         self.mid_subframes[InstSelect] = frame
-        self._showFrame(InstSelect)
+        self._show_frame(InstSelect)
 
-    def _showFrame(self, cont):
+    def _show_frame(self, cont):
         # Raises the given subframe of Frame 2 (See diagram above)
         frame = self.mid_subframes[cont]
         frame.tkraise()
 
-    def _decorateTopFrame(self, banner):
+    def _decorate_top_frame(self, banner):
         # Load Logo
         fact = 5
         self.img = Image.open("data/logo3.png")  # Use the pillow library to load the image.
@@ -203,10 +215,10 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         self.title.pack(side='left', padx=10)
 
         # Create Buttons
-        self._stopButton(self.top_frame, 'ne')
-        self._startButton(self.top_frame, 'se')
+        self._stop_button(self.top_frame, 'ne')
+        self._start_button(self.top_frame, 'se')
 
-    def _decorateBotFrame(self, banner):
+    def _decorate_bot_frame(self, banner):
         # Creates all the widgets in Frame 3 of the main window, see schematic above.
 
         # Make two subframes for organization
@@ -223,7 +235,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         self.save_file_path_label.pack()
 
         # Invoke method for the Save as button
-        self._saveAsButton(bot1)
+        self._save_as_button(bot1)
 
         # Create tk.Label for time indicator
         self.bottom_time_label = tk.Label(bot2, bg='black', fg='white', text='Execution time:' + self.exec_time.get())
@@ -234,9 +246,10 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
                                                                  height=self.pane_height / 2,
                                                                  bg='black', bd=0, highlightthickness=0)
         self.instrument_bool_indicator_canvas_k2612B.pack(side='right')
-        self.instrument_bool_indicator_canvas_k2612B.bool_indicator = self.instrument_bool_indicator_canvas_k2612B.create_oval(
-            int(1 / 3 * 1 / 2 * self.pane_height), int(1 / 3 * 1 / 2 * self.pane_height),
-            int(2 / 3 * 1 / 2 * self.pane_height), int(2 / 3 * 1 / 2 * self.pane_height), fill="gray")
+        self.instrument_bool_indicator_canvas_k2612B.bool_indicator = \
+            self.instrument_bool_indicator_canvas_k2612B.create_oval(
+                int(1 / 3 * 1 / 2 * self.pane_height), int(1 / 3 * 1 / 2 * self.pane_height),
+                int(2 / 3 * 1 / 2 * self.pane_height), int(2 / 3 * 1 / 2 * self.pane_height), fill="gray")
 
         # Create a tk.Label for k2612B_instrument connection.
         self.instrument_bool_indicator_label_k2612B = tk.Label(bot2, bg='black', fg='white', text='K2612B connected?')
@@ -247,9 +260,10 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
                                                                 height=self.pane_height / 2,
                                                                 bg='black', bd=0, highlightthickness=0)
         self.instrument_bool_indicator_canvas_k6221.pack(side='right')
-        self.instrument_bool_indicator_canvas_k6221.bool_indicator = self.instrument_bool_indicator_canvas_k6221.create_oval(
-            int(1 / 3 * 1 / 2 * self.pane_height), int(1 / 3 * 1 / 2 * self.pane_height),
-            int(2 / 3 * 1 / 2 * self.pane_height), int(2 / 3 * 1 / 2 * self.pane_height), fill="gray")
+        self.instrument_bool_indicator_canvas_k6221.bool_indicator = \
+            self.instrument_bool_indicator_canvas_k6221.create_oval(
+                int(1 / 3 * 1 / 2 * self.pane_height), int(1 / 3 * 1 / 2 * self.pane_height),
+                int(2 / 3 * 1 / 2 * self.pane_height), int(2 / 3 * 1 / 2 * self.pane_height), fill="gray")
 
         # Create a tk.Label for k2612B_instrument connection.
         self.instrument_bool_indicator_label_k6221 = tk.Label(bot2, bg='black', fg='white', text='K6221 connected?')
@@ -260,18 +274,33 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
                                                                  height=self.pane_height / 2,
                                                                  bg='black', bd=0, highlightthickness=0)
         self.instrument_bool_indicator_canvas_k2182A.pack(side='right')
-        self.instrument_bool_indicator_canvas_k2182A.bool_indicator = self.instrument_bool_indicator_canvas_k2182A.create_oval(
-            int(1 / 3 * 1 / 2 * self.pane_height), int(1 / 3 * 1 / 2 * self.pane_height),
-            int(2 / 3 * 1 / 2 * self.pane_height), int(2 / 3 * 1 / 2 * self.pane_height), fill="gray")
+        self.instrument_bool_indicator_canvas_k2182A.bool_indicator = \
+            self.instrument_bool_indicator_canvas_k2182A.create_oval(
+                int(1 / 3 * 1 / 2 * self.pane_height), int(1 / 3 * 1 / 2 * self.pane_height),
+                int(2 / 3 * 1 / 2 * self.pane_height), int(2 / 3 * 1 / 2 * self.pane_height), fill="gray")
 
         # Create a tk.Label for k2612B_instrument connection.
         self.instrument_bool_indicator_label_k2182A = tk.Label(bot2, bg='black', fg='white', text='K2182A connected?')
         self.instrument_bool_indicator_label_k2182A.pack(side='right')
 
-    def _updateBottom(self):
-        # Updates the indicators created in _decorateBotFrame and the Compliance indicator.
+        # Create a bool indicator for k2400 connection.
+        self.instrument_bool_indicator_canvas_k2400 = tk.Canvas(bot2, width=self.pane_height / 2,
+                                                                height=self.pane_height / 2,
+                                                                bg='black', bd=0, highlightthickness=0)
+        self.instrument_bool_indicator_canvas_k2400.pack(side='right')
+        self.instrument_bool_indicator_canvas_k2400.bool_indicator = \
+            self.instrument_bool_indicator_canvas_k2400.create_oval(
+                int(1 / 3 * 1 / 2 * self.pane_height), int(1 / 3 * 1 / 2 * self.pane_height),
+                int(2 / 3 * 1 / 2 * self.pane_height), int(2 / 3 * 1 / 2 * self.pane_height), fill="gray")
+
+        # Create a tk.Label for k2400_instrument connection.
+        self.instrument_bool_indicator_label_k2400 = tk.Label(bot2, bg='black', fg='white', text='K2400 connected?')
+        self.instrument_bool_indicator_label_k2400.pack(side='right')
+
+    def _update_bottom(self):
+        # Updates the indicators created in _decorate_bot_frame and the Compliance indicator.
         # Needs the .runtime attribute to be updated for it to makes sense. 
-        # _updateBottom is subscribed to the observer in the slowest lane as it is only interesting to the user.
+        # _update_bottom is subscribed to the observer in the slowest lane as it is only interesting to the user.
 
         # Set the exec_time tk.StringVar to the current value of runtime.
         self.exec_time.set(str(int(self.runtime)))
@@ -297,6 +326,16 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
                 self.instrument_bool_indicator_canvas_k6221.bool_indicator,
                 fill="green")
 
+        # Set the k2400_instrument bool indicator color.
+        if self.k2400_instrument is None:
+            self.instrument_bool_indicator_canvas_k2400.itemconfig(
+                self.instrument_bool_indicator_canvas_k2400.bool_indicator,
+                fill="gray")
+        else:
+            self.instrument_bool_indicator_canvas_k2400.itemconfig(
+                self.instrument_bool_indicator_canvas_k2400.bool_indicator,
+                fill="green")
+
         # Set the k2182A_instrument bool indicator color.
         if self.k2182A_instrument is None:
             self.instrument_bool_indicator_canvas_k2182A.itemconfig(
@@ -317,34 +356,35 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
                                                                fill=fill)
             if any([self.complianceA, self.complianceB]):
                 self.k2612B_instrument.beeper(0.2)
+
         # Set the filepath display.        
         if self.filedir is None:
             self.save_file_path_label['text'] = 'file: N\A'
         else:
-            self.save_file_path_label['text'] = 'file: ' + self.filedir
+            self.save_file_path_label['text'] = f'file: {self.filedir}'
 
-    def _stopButton(self, banner, pos):
-        # Creates the emergency Stop Button which can safely exit the app via _safeExit.
-        self.halt = tk.Button(banner, bg='red', text='STOP', fg='white', command=self._safeExit)
+    def _stop_button(self, banner, pos):
+        # Creates the emergency Stop Button which can safely exit the app via _safe_exit.
+        self.halt = tk.Button(banner, bg='red', text='STOP', fg='white', command=self._safe_exit)
         self.halt.pack(anchor=pos, pady=5, padx=5)
 
-    def _startButton(self, banner, pos):
+    def _start_button(self, banner, pos):
         # Start button; makes you pick an k2612B_instrument via __Start_up__.
-        self.start_button = tk.Button(banner, bg='green', text='START', fg='white', command=self._startUp)
+        self.start_button = tk.Button(banner, bg='green', text='START', fg='white', command=self._startup)
         self.start_button.pack(anchor=pos, pady=5, padx=5)
 
-    def _editButton(self, banner, pos):
-        # Creates the _editButton in the position of the old start button. Calls _editInstrument instead of
-        # _startUp as you need to close old connections to look for new ones. See methods.
-        self.start_button = tk.Button(banner, text='EDIT', command=self._editInstrument)
+    def _edit_button(self, banner, pos):
+        # Creates the _edit_button in the position of the old start button. Calls _edit_instrument instead of
+        # _startup as you need to close old connections to look for new ones. See methods.
+        self.start_button = tk.Button(banner, text='EDIT', command=self._edit_instrument)
         self.start_button.pack(anchor=pos, pady=5, padx=5)
 
-    def _saveAsButton(self, banner):
-        # Creates the Save As button in Frame 3. Calls _createSaveFile.
-        self.save_button = tk.Button(banner, text='SAVEDIR', command=self._createSaveFile)
+    def _save_as_button(self, banner):
+        # Creates the Save As button in Frame 3. Calls _create_save_file.
+        self.save_button = tk.Button(banner, text='SAVEDIR', command=self._create_save_file)
         self.save_button.pack(pady=5, padx=5)
 
-    def _createSaveFile(self):
+    def _create_save_file(self):
         # Calls the tk.filedialog method for creating a savefile and stores the result in self.file.
         # Can later be used to access the file via pythons builtins, while offering the convenience of a prebuilt
         # filedialog.
@@ -358,7 +398,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         # This attribute will give us access to the InstClass_K2612B methods defined in rm_setup.
         print(inlist[lbox.curselection()[0]])
         self.k2612B_instrument = InstClass_K2612B(inlist[lbox.curselection()[0]])
-        self.observer.subscribe(self._checkCompliance_K2612B, 0)
+        self.observer.subscribe(self._check_compliance_K2612B, 0)
 
     def _setInstrument_K2182A(self, lbox, inlist):
         # Creates an instance of the Inst_Class class from rm_setup as self.k2182A_instrument.
@@ -371,7 +411,12 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         # This attribute will give us access to the InstClass_K6221 methods defined in rm_setup.
         print(inlist[lbox.curselection()[0]])
         self.k6221_instrument = InstClass_K6221(inlist[lbox.curselection()[0]])
-        # self.observer.subscribe(self._checkCompliance_K6221, 0) # EDIT THIS
+
+    def _setInstrument_K2400(self, lbox, inlist):
+        # Creates an instance of the Inst_Class class from rm_setup as self.k2400_instrument.
+        # This attribute will give us access to the InstClass_K2400 methods defined in rm_setup.
+        print(inlist[lbox.curselection()[0]])
+        self.k2400_instrument = InstClass_K2400(inlist[lbox.curselection()[0]])
 
     def _closeInstrument(self, instrument):
         # Closes the k2612B_instrument connection, if it exists.
@@ -380,10 +425,14 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         else:
             instrument._close()
 
-    def configSMU(self, what, value, chan):
-        # Config k2612B_instrument method called by various tk.OptionMenus in the InstCont_K2612B frame of Frame 2. See Schematic.
+    # Note that K2612B gets two methods as I made the program channel-agnostic for that instrument. One method switches
+    # the channel functions (_config_) and the other sets the actual values (_command_). Similarily, the K2400 has a
+    # _command_ function to select the sourcing (V or I). The other instruments only get _command_.
+    def controller_config_K2612B(self, what, value, chan):
+        # Config k2612B_instrument method called by various tk.OptionMenus in the InstCont_K2612B frame of Frame 2.
+        # See Schematic.
         if self.k2612B_instrument is None:
-            pass
+            print('You tried to configure a K2612B SMU which is not connected!')
         else:
             if what == 'SRC' and value == 'I':
                 self.k2612B_instrument.src_I(chan)
@@ -398,11 +447,11 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
             elif what == 'SENS' and value == '4-Point':
                 self.k2612B_instrument.sense_remote(chan)
 
-    def commandSMU(self, what, config_widget, chan, val):
-        # Command k2612B_instrument method called by various tk.Entrys in the InstCont_K2612B frame of Frame 2. See Schematic.
+    def controller_command_K2612B(self, what, config_widget, chan, val):
+        # Command k2612B_instrument method called by various tk.Entrys in the InstCont_K2612B frame of Frame 2.
         # val is passed as the entry tk.StringVar, values are retrieved by .get()
         if self.k2612B_instrument is None:
-            pass
+            print('You passed a command for a K2612B SMU which is not connected!')
         else:
             if val.get()[:0] in ['e', 'E', '.', '-', '+', ' ']:
                 pass
@@ -430,9 +479,9 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
                 except:
                     print('Bad Input')
 
-    def commandK6221(self, what, val):
+    def controller_command_K6221(self, what, val):
         if self.k6221_instrument is None:
-            pass
+            print('You passed a command for a K6221 source which is not connected!')
         else:
             if val.get()[:0] in ['e', 'E', '.', '-', '+', ' ']:
                 pass
@@ -449,9 +498,9 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
                 except:
                     print('Bad Input')
 
-    def commandK2182A(self, what, val):
+    def controller_command_K2182A(self, what, val):
         if self.k2182A_instrument is None:
-            pass
+            print('You passed a command for a K2182A nvoltmeter which is not connected!')
         else:
             if val.get()[:0] in ['e', 'E', '.', '-', '+', ' ']:
                 pass
@@ -468,7 +517,60 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
                 except:
                     print('Bad Input')
 
-    def _checkCompliance_K2612B(self):
+    def controller_config_K2400(self, what, value):
+        # Config k2400_instrument method called by various tk.OptionMenus in the InstCont_K2400 frame of Frame 2.
+        # See Schematic.
+        if self.k2400_instrument is None:
+            print('You tried to configure a K2612B SMU which is not connected!')
+        else:
+            if what == 'SRC' and value == 'I':
+                self.k2400_instrument.src_I()
+            elif what == 'SRC' and value == 'V':
+                self.k2400_instrument.src_V()
+            elif what == 'MEAS' and value == 'I':
+                self.k2400_instrument.meas_I()
+            elif what == 'MEAS' and value == 'V':
+                self.k2400_instrument.measure_channel()
+            elif what == 'SENS' and value == '2-Point':
+                self.k2400_instrument.sense_local()
+                # not implemented
+            elif what == 'SENS' and value == '4-Point':
+                self.k2400_instrument.sense_remote()
+                # not implemented
+
+    def controller_command_K2400(self, what, config_widget, val):
+        # Command k2400_instrument method called by various tk.Entrys in the InstCont_K2400 frame of Frame 2.
+        # val is passed as the entry tk.StringVar, values are retriev ed by .get()
+        if self.k2400_instrument is None:
+            print('You passed a command for a K2400 SMU which is not connected!')
+        else:
+            if val.get()[:0] in ['e', 'E', '.', '-', '+', ' ']:
+                pass
+            else:
+                try:
+                    val_str = val.get()
+                    val_float = float(val_str)
+                    if what == 'Compliance':
+                        # Trying to stop it from issuing "set compliance 0" when the user starts typing, as that causes
+                        # an error on the isntrument (compliance must be >0!)
+                        if config_widget == 'I' and 0.02 <= val_float <= 200:
+                            self.k2400_instrument.src_limit_VOLTS(val_str)
+                        elif config_widget == 'V' and 0.000_000_01 <= val_float <= 200:
+                            self.k2400_instrument.src_limit_AMPS(val_str)
+                        else:
+                            pass
+                    elif what == 'Range' and config_widget == 'I':
+                        self.k2400_instrument.src_range_AMPS(val_str)
+                    elif what == 'Range' and config_widget == 'V':
+                        self.k2400_instrument.src_range_VOLTS(val_str)
+                    elif what == 'Level' and config_widget == 'I':
+                        self.k2400_instrument.src_level_AMPS(val_str)
+                    elif what == 'Level' and config_widget == 'V':
+                        self.k2400_instrument.src_level_VOLTS(val_str)
+                except:
+                    print('Bad Input')
+
+    def _check_compliance_K2612B(self):
         self.complianceA = True if self.k2612B_instrument._query('smua.source.compliance') == 'true' else False
         # print(self.complianceA)
         self.complianceB = True if self.k2612B_instrument._query('smub.source.compliance') == 'true' else False
@@ -480,7 +582,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
     #     self.complianceB = True if self.k2612B_instrument._query('smub.source.compliance') == 'true' else False
     #     # print(self.complianceB)
 
-    def _checkConditions_k2612B(self, frame):
+    def _check_conditions_K2612B(self, frame):
         if self.filedir is None:
             tk.messagebox.showwarning('ERROR: No SAVEDIR', 'Please select a saving directory first.')
             return False
@@ -494,50 +596,50 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         else:
             return True
 
-    def startMeasurement(self, float):
+    def start_measurements_sourced_on_K2612B(self, float):
         print(self.filedir)
         if float == 'Rt' or float == 'PLS':
-            cond = self._checkConditions_k2612B(InstCont_K2612B)
+            cond = self._check_conditions_K2612B(InstCont_K2612B)
         elif float == 'Rt_nvm' or float == 'PLS_nvm':
-            cond = self._checkConditions_k2612B(InstCont_K2612BandK2182A)
+            cond = self._check_conditions_K2612B(InstCont_K2612BandK2182A)
 
         if cond:
             if float == 'Rt':
                 m = R_t_Measurement(self.mid_frame, self)
                 m.grid(row=0, column=0, sticky="nsew")
                 self.mid_subframes[R_t_Measurement] = m
-                self._showFrame(R_t_Measurement)
+                self._show_frame(R_t_Measurement)
             elif float == 'IV':
                 m = I_V_Measurement(self.mid_frame, self)
                 m.grid(row=0, column=0, sticky="nsew")
                 self.mid_subframes[I_V_Measurement] = m
-                self._showFrame(I_V_Measurement)
+                self._show_frame(I_V_Measurement)
             elif float == 'PLS':
                 m = Pulse_Series_Measurement(self.mid_frame, self)
                 m.grid(row=0, column=0, sticky="nsew")
                 self.mid_subframes[Pulse_Series_Measurement] = m
-                self._showFrame(Pulse_Series_Measurement)
+                self._show_frame(Pulse_Series_Measurement)
             elif float == 'Rt_nvm':
                 m = R_t_Measurement_K2612Bandk2182A(self.mid_frame, self)
                 m.grid(row=0, column=0, sticky="nsew")
                 self.mid_subframes[R_t_Measurement_K2612Bandk2182A] = m
-                self._showFrame(R_t_Measurement_K2612Bandk2182A)
+                self._show_frame(R_t_Measurement_K2612Bandk2182A)
             elif float == 'PLS_nvm':
                 m = Pulse_Series_Measurement_K2612Bandk2182A(self.mid_frame, self)
                 m.grid(row=0, column=0, sticky="nsew")
                 self.mid_subframes[Pulse_Series_Measurement_K2612Bandk2182A] = m
-                self._showFrame(Pulse_Series_Measurement_K2612Bandk2182A)
+                self._show_frame(Pulse_Series_Measurement_K2612Bandk2182A)
             else:
                 raise AssertionError
 
-    def _checkDirs(self, name):
+    def _check_dirs(self, name):
         if self.filedir == None:
             pass
         else:
             if name not in os.listdir(self.filedir):
                 os.mkdir(self.filedir + '/' + name)
 
-    def _createFile(self, fp, suffix):
+    def _create_file(self, fp, suffix):
         string = str()
         for i in range(6):
             string += str(time.localtime()[i])
@@ -545,7 +647,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         # self.file_obj = open(fp + '/' + string + suffix + '.csv', mode='x')
         self.file_obj = open(os.path.join(fp, f'{string + suffix}.csv'), mode='x')
 
-    def _writeLineToFile(self, line):
+    def _write_line_to_file(self, line):
         self.file_obj.write(line + '\n')
         self.file_obj.flush()
         os.fsync(self.file_obj)

@@ -1545,6 +1545,432 @@ class Pulse_Series_Measurement_K6221andK2182A(Measurement):
 
 # class Measurement_With_K2400(Measurement):
 
+class R_t_Measurement_K2400(Measurement):
+    def __init__(self, parent, controller):
+        Measurement.__init__(self, parent, controller)
+
+        self.label.configure(text='Resistance - Time')
+        self.suffix = 'Res-Time'
+        self.dirname = 'Rt'
+        self.header = ['TIME_seconds', 'SRC_V_volts', 'SRC_I_amps', 'VOLTMETER_volts', 'RESISTANCE_Ohms']
+
+        self.ax = self.fig.add_subplot(111)
+        decorate_ax(self.ax)
+        self.ax.set_xlabel('Time (s)')
+        self.ax.set_ylabel('Resistance (Ohm)')
+
+        self.scat = self.ax.scatter([], [], **skatargs1)
+
+    def _return_to_inst_cont(self):
+        self._stop_measurement()
+        self.controller._show_frame(InstCont_K2400andK2182A)
+
+
+    def _update_plot(self):
+        if self.dpoint >= 1:
+            time = self.measurement['TIME_seconds'][1:self.dpoint]
+            res = self.measurement['RESISTANCE_Ohms'][1:self.dpoint]
+            # offsets=list(np.stack((time,res),axis=1))
+            # print(offsets)
+            self.ax.clear()
+            self.scat = self.ax.scatter(time, res, **skatargs1)
+            decorate_ax(self.ax)
+            # self.ax.relim()
+            # self.ax.autoscale_view()
+            self.canvas.draw()
+            self.canvas.flush_events()
+
+    def _get_params(self):
+        inscont = self.controller.mid_subframes[InstCont_K2400andK2182A].measurement_switcher
+        self.params = {
+            'PROBE': inscont.probe_current.entry_stringvar.get(),
+            'DURATION': inscont.probe_duration.entry_stringvar.get(),
+            'DATASTEP': inscont.datastep.entry_stringvar.get(),
+        }
+
+    def _get_number_of_datapoints(self):
+        dur = float(self.params['DURATION'])
+        stp = float(self.params['DATASTEP'])
+        return int(dur / stp)
+
+    def _measure(self):
+        inst = self.controller.k2400_instrument
+        if self.iter == 0:
+            if self.smu_src == 'I':
+                # inst.beeper(0.1)
+                # inst.beeper(0.1)
+                # inst.beeper(0.1)
+                # inst.src_I(self.smu_chan)
+                inst.src_level_AMPS(self.params['PROBE'])
+            elif self.smu_src == 'V':
+                # inst.beeper(0.1)
+                # inst.beeper(0.1)
+                # inst.beeper(0.1)
+                # inst.src_I(self.smu_chan)
+                inst.src_level_VOLTS(self.params['PROBE'])
+            self.iter += 1
+            self.exp_time = self.controller.runtime
+            self.start_time = self.controller.runtime
+            self.running_time = self.controller.runtime
+            self._inst_cont_turn_on()
+            smu_volt, smu_curr, *_ = self.controller.k2400_instrument.measure()
+            vm_volt = self.controller.k2182A_instrument.measure_channel(1) #hardcoded ch1
+            time = str(round(self.exp_time, 6))
+            res = round(float(vm_volt) / float(smu_curr), 4)
+            self._send_line([time, smu_volt, smu_curr, vm_volt, str(res)])
+            self._set_datadict_vals([time, smu_volt, smu_curr, vm_volt], self.dpoint)
+            self.dpoint += 1
+        else:
+            if (self.exp_time - self.start_time) >= float(self.params['DURATION']):
+                self._stop_measurement()
+            elif (self.exp_time - self.running_time) >= float(self.params['DATASTEP']):
+                self.exp_time = self.controller.runtime
+                self.running_time = self.controller.runtime
+                smu_volt, smu_curr, *_ = self.controller.k2400_instrument.measure()
+                vm_volt = self.controller.k2182A_instrument.measure_channel(1) #hardcoded ch1
+                time = str(round(self.exp_time, 6))
+                res = str(round(float(vm_volt) / float(smu_curr), 4))
+                self._send_line([time, smu_volt, smu_curr, vm_volt, res])
+                self._set_datadict_vals([time, smu_volt, smu_curr, vm_volt, res], self.dpoint)
+                self.dpoint += 1
+            else:
+                self.exp_time = self.controller.runtime
+
+    def _find_voltmeter(self):
+        self.smu=self.controller.mid_subframes[InstCont_K2400andK2182A].SMU_Subframe
+        self.smu_src = self.smu.sour.info.get()
+        self.voltmeter=self.controller.mid_subframes[InstCont_K2400andK2182A].Ch1_read_V_StringVar
+
+    def _inst_cont_turn_on(self):
+        self.controller.k2400_instrument.outp_ON()
+        # print('unsubscribing measurement')
+
+    def _inst_cont_turn_off(self):
+        self.controller.k2400_instrument.outp_OFF()
+        # print('unsubscribing measurement')
+
+
+
+class Pulse_Series_Measurement_K2400(Measurement):
+    def __init__(self, parent, controller):
+        Measurement.__init__(self, parent, controller)
+        self.resmeas_bool = False
+        self.resmeas_bool_polarity_switch = False
+        self.lastres = None
+
+        self.label.configure(text='Pulse Series')
+        self.suffix = 'PLS'
+        self.dirname = 'PLS'
+        self.header = ['PLS_number', 'PLS_V_volts', 'PLS_I_amps', 'RMAX_Ohms', 'VOLTMETER_volts', 'RMIN_Ohms']
+
+        self.ax1 = self.fig.add_subplot(211)
+        self.ax1_twin = self.ax1.twinx()
+        self.ax2 = self.fig.add_subplot(212)
+        self.ax2_twin = self.ax2.twinx()
+        for ax in [self.ax1, self.ax2, self.ax1_twin, self.ax2_twin]:
+            decorate_ax(ax)
+
+        self.ax1.sharex(self.ax2)
+        self.ax2.set_xlabel('PLS Number')
+        self.ax1.set_ylabel('Pulse Current (A)')
+        self.ax1_twin.set_ylabel('Pulse Voltage (V)')
+        self.ax2.set_ylabel('Resistance_min (Ohm)')
+        self.ax2_twin.set_ylabel('Resistance_max (Ohm)')
+
+        self.scat1 = self.ax1.scatter([], [], **skatargs1)
+        self.scat1_twin = self.ax1_twin.scatter([], [], **skatargs2)
+        self.scat2 = self.ax2.scatter([], [], **skatargs1)
+        self.scat2_twin = self.ax2_twin.scatter([], [], **skatargs2)
+
+        self.measurement_accumulator = []
+        self.measurement_accumulator1 = []
+        self.measurement_accumulator2 = []
+        self.measurement_accumulator3 = []
+
+        self.plsvals = []
+
+    def _set_sourcing(self, level):
+        inst = self.controller.k2400_instrument
+        if self.controller.mid_subframes[InstCont_K2400andK2182A].SMU_Subframe.sour.info.get() == 'I':
+            # inst.beeper(0.1)
+            # inst.beeper(0.1)
+            # inst.beeper(0.1)
+            # inst.src_I(self.smu_chan)
+            inst.src_level_AMPS(level)
+        elif self.controller.mid_subframes[InstCont_K2400andK2182A].SMU_Subframe.sour.info.get() == 'V':
+            # inst.beeper(0.1)
+            # inst.beeper(0.1)
+            # inst.beeper(0.1)
+            # inst.src_I(self.smu_chan)
+            inst.src_level_VOLTS(level)
+
+
+    def _check_param_validity(self):
+        for value in self.params.values():
+            try:
+                float(value)
+                print(value)
+            except:
+                tk.messagebox.showwarning('ERROR: BAD PARAMS',
+                                          'Please check the input parameters on the previous screen.')
+                break
+        print('self.smu_src is', self.smu_src)
+
+    def _inst_cont_turn_on(self):
+        self.controller.k2400_instrument.outp_ON()
+        # print('unsubscribing measurement')
+
+    def _inst_cont_turn_off(self):
+        self.controller.k2400_instrument.outp_ON()
+        # print('unsubscribing measurement')
+    def _return_to_inst_cont(self):
+        self._stop_measurement()
+        self.controller._show_frame(InstCont_K2400andK2182A)
+
+    def _update_plot(self):
+        if self.dpoint >= 1:
+            plsno = self.measurement['PLS_number'][1:self.dpoint]
+            plsvolt = self.measurement['PLS_V_volts'][1:self.dpoint]
+            plsamp = self.measurement['PLS_I_amps'][1:self.dpoint]
+            res_max = self.measurement['RMAX_Ohms'][1:self.dpoint]
+            res_min = self.measurement['RMIN_Ohms'][1:self.dpoint]
+            for ax in self.fig.get_axes():
+                ax.clear()
+            self.scat1 = self.ax1.scatter(plsno, plsamp, label='Current (A)', **skatargs1)
+            self.scat1_twin = self.ax1_twin.scatter(plsno, plsvolt, label='Voltage (V)', **skatargs2)
+            self.scat2 = self.ax2.scatter(plsno, res_min, label='Res_Min (Ohm)', **skatargs1)
+            self.scat2_twin = self.ax2_twin.scatter(plsno, res_max, label='Res_Max (Ohm)', **skatargs2)
+            for ax in self.fig.get_axes():
+                decorate_ax(ax)
+
+            self.ax2.set_xlabel('PLS Number')
+            self.ax1.set_ylabel('Pulse Current (A)')
+            self.ax1_twin.set_ylabel('Pulse Voltage (V)')
+            self.ax2.set_ylabel('Resistance_min (Ohm)')
+            self.ax2_twin.set_ylabel('Resistance_max (Ohm)')
+
+            self.ax2.legend(loc='upper left')
+            self.ax1.legend(loc='upper left')
+            self.ax1_twin.legend(loc='upper right')
+            self.ax2_twin.legend(loc='upper right')
+
+            self.canvas.draw()
+            self.canvas.flush_events()
+
+    def _measure(self):
+        smu = self.controller.k2400_instrument
+        nvolt = self.controller.k2182A_instrument
+
+        if self.resmeas_bool == True:
+            if self.resmeas_bool_polarity_switch == False:
+                if self.iter == 0:
+                    self._set_sourcing(self.params['PROBE'])
+
+                    self.iter += 1
+                    self.exp_time = self.controller.runtime
+                    self.start_time = self.controller.runtime
+                    self.running_time = self.controller.runtime
+                    self._inst_cont_turn_on()
+
+                    smu_volt, smu_curr,  *_ = smu.measure()
+                    vm_volt = nvolt.measure_channel(1)
+                    res = round(float(vm_volt) / float(smu_curr), 4)
+
+                    self.measurement_accumulator.append(res)
+                else:
+                    if (self.exp_time - self.start_time) >= float(self.params['PROBEDURATION']):
+
+                        smu_volt, smu_curr,  *_ = smu.measure()
+                        vm_volt = nvolt.measure_channel(1)
+                        res = round(float(vm_volt) / float(smu_curr), 4)
+                        self.measurement_accumulator.append(res)
+                        # inst.beeper(0.1)
+                        self._inst_cont_turn_off()
+                        self.resmeas_bool_polarity_switch = True
+                        self.iter = 0
+                    elif (self.exp_time - self.running_time) >= float(self.params['PROBEDATASTEP']):
+                        self.exp_time = self.controller.runtime
+                        self.running_time = self.controller.runtime
+
+                        smu_volt, smu_curr,  *_ = smu.measure()
+                        vm_volt = nvolt.measure_channel(1)
+                        res = round(float(vm_volt) / float(smu_curr), 4)
+                        self.measurement_accumulator.append(res)
+                    else:
+                        self.exp_time = self.controller.runtime
+            else:
+                if self.iter == 0:
+                    self._set_sourcing(str(-1 * float(self.params['PROBE'])))
+
+                    self.iter += 1
+                    self.exp_time = self.controller.runtime
+                    self.start_time = self.controller.runtime
+                    self.running_time = self.controller.runtime
+                    self._inst_cont_turn_on()
+
+
+                    smu_volt, smu_curr,  *_ = smu.measure()
+                    vm_volt = nvolt.measure_channel(1)
+                    res = round(float(vm_volt) / float(smu_curr), 4)
+                    self.measurement_accumulator.append(res)
+
+                else:
+                    if (self.exp_time - self.start_time) >= float(self.params['PROBEDURATION']):
+                        # print(self.measurement_accumulator)
+                        rmin = sum(self.measurement_accumulator) / len(self.measurement_accumulator)
+                        self.measurement['RMIN_Ohms'][self.dpoint] = rmin
+                        self.lastres = rmin
+                        self._send_line([
+                            self.measurement['PLS_number'][self.dpoint], self.measurement['PLS_V_volts'][self.dpoint],
+                            self.measurement['PLS_I_amps'][self.dpoint], self.measurement['RMAX_Ohms'][self.dpoint],
+                            self.measurement['VOLTMETER_volts'][self.dpoint], self.measurement['RMIN_Ohms'][self.dpoint]
+                        ])
+
+                        self.dpoint += 1
+                        if self.dpoint >= len(self.plsvals):
+                            self._stop_measurement()
+                        else:
+                            # inst.beeper(0.1)
+                            self._inst_cont_turn_off()
+                            self.measurement_accumulator = []
+                            self.resmeas_bool = False
+                            self.resmeas_bool_polarity_switch = False
+                            self.iter = 0
+                    elif (self.exp_time - self.running_time) >= float(self.params['PROBEDATASTEP']):
+                        self.exp_time = self.controller.runtime
+                        self.running_time = self.controller.runtime
+
+                        smu_volt, smu_curr,  *_ = smu.measure()
+                        vm_volt = nvolt.measure_channel(1)
+                        res = round(float(vm_volt) / float(smu_curr), 4)
+                        self.measurement_accumulator.append(res)
+                    else:
+                        self.exp_time = self.controller.runtime
+        else:
+            if self.iter == 0:
+                # Pulsing
+                self._set_sourcing(str(self.plsvals[self.dpoint]))
+
+                self.iter += 1
+                self.exp_time = self.controller.runtime
+                self.start_time = self.controller.runtime
+                self.running_time = self.controller.runtime
+                self._inst_cont_turn_on()
+
+                smu_volt, smu_curr,  *_ = smu.measure()
+                vm_volt = nvolt.measure_channel(1)
+                vm_volt = float(vm_volt)
+                smu_curr = float(smu_curr)
+                res = round(vm_volt / smu_curr, 4)
+
+                self.measurement_accumulator.append(res)
+                self.measurement_accumulator1.append(float(smu_curr))
+                self.measurement_accumulator2.append(float(smu_volt))
+                self.measurement_accumulator3.append(float(vm_volt))
+
+            else:
+                if (self.exp_time - self.start_time) >= float(self.params['DURATION']):
+                    mylen = len(self.measurement_accumulator)
+                    rmax = sum(self.measurement_accumulator) / mylen
+                    plscurr = sum(self.measurement_accumulator1) / mylen
+                    plsvlt = sum(self.measurement_accumulator2) / mylen
+                    nanovlt = sum(self.measurement_accumulator3) / mylen
+                    self.measurement['RMAX_Ohms'][self.dpoint] = rmax
+                    self.measurement['PLS_V_volts'][self.dpoint] = plsvlt
+                    self.measurement['PLS_I_amps'][self.dpoint] = plscurr
+                    self.measurement['VOLTMETER_volts'][self.dpoint] = nanovlt
+                    self.measurement['PLS_number'][self.dpoint] = self.dpoint
+                    # inst.beeper(0.1)
+                    self._inst_cont_turn_off()
+                    self.measurement_accumulator = []
+                    self.measurement_accumulator1 = []
+                    self.measurement_accumulator2 = []
+                    self.measurement_accumulator3 = []
+                    self.iter = 0
+
+                    # self._send_line([
+                    #     self.measurement['PLS_number'][self.dpoint], self.measurement['PLS_V_volts'][self.dpoint],
+                    #     self.measurement['PLS_I_amps'][self.dpoint], self.measurement['RMAX_Ohms'][self.dpoint],
+                    #     self.measurement['VOLTMETER_volts'][self.dpoint], self.measurement['RMIN_Ohms'][self.dpoint]
+                    # ])
+                    # self.dpoint += 1
+                    self.resmeas_bool = True
+
+                    # if self.dpoint >= len(self.plsvals):
+                    #     self.__Stop_Measurement__()
+
+
+                elif (self.exp_time - self.running_time) >= 0.01:
+                    self.exp_time = self.controller.runtime
+                    self.running_time = self.controller.runtime
+
+
+                    smu_volt, smu_curr,  *_ = smu.measure()
+                    vm_volt = nvolt.measure_channel(1)
+                    vm_volt = float(vm_volt)
+                    smu_curr = float(smu_curr)
+                    res = round(vm_volt / smu_curr, 4)
+
+                    self.measurement_accumulator.append(res)
+                    self.measurement_accumulator1.append(float(smu_curr))
+                    self.measurement_accumulator2.append(float(smu_volt))
+                    self.measurement_accumulator3.append(float(vm_volt))
+
+                else:
+                    self.exp_time = self.controller.runtime
+
+    def _get_params(self):
+        inscont = self.controller.mid_subframes[InstCont_K2400andK2182A].measurement_switcher
+        self.params = {
+            'START': inscont.pulsing_start.entry_stringvar.get(),
+            'STOP': inscont.pulsing_stop.entry_stringvar.get(),
+            'STEP': inscont.pulsing_step.entry_stringvar.get(),
+            'DURATION': inscont.pulsing_duration.entry_stringvar.get(),
+            'PROBE': inscont.probe_current.entry_stringvar.get(),
+            'PROBEDURATION': inscont.probe_duration.entry_stringvar.get(),
+            'PROBEDATASTEP': inscont.datastep.entry_stringvar.get(),
+        }
+        print(self.params)
+        steps = (float(self.params['STOP']) - float(self.params['START'])) / float(self.params['STEP'])
+        for i in range(int(steps)):
+            self.plsvals.append(float(self.params['START']) + i * float(self.params['STEP']))
+        print('plsvals are', self.plsvals)
+
+    def _get_number_of_datapoints(self):
+        sta = float(self.params['START'])
+        stp = float(self.params['STOP'])
+        sep = float(self.params['STEP'])
+        dur = float(self.params['DURATION'])
+        print('start, stop, step', sta, stp, sep)
+        return int(abs(((stp - sta) / sep)))
+
+    def _set_goal(self):
+        # print('trying to set Goal...')
+        stringvar = self.End_StringVar.get()
+        # print(stringvar)
+        try:
+            floatvar = float(stringvar)
+            # print(floatvar)
+            self.goalres = floatvar
+        except:
+            print('Bad Value')
+
+    def _check_goal(self):
+        # print('checking...\n', f'Last ressitance is {self.lastres}\n',f'Goal resistance is {self.goalres}')
+        if self.goalres is not None and self.lastres is not None and abs(self.lastres) >= abs(self.goalres):
+            # self._inst_cont_turn_off()
+            # self.goalres = None
+            self.lastres = None
+            self._stop_measurement()
+
+    def _inst_cont_turn_on(self):
+        self.controller.k2400_instrument.outp_ON()
+        # print('unsubscribing measurement')
+
+    def _inst_cont_turn_off(self):
+        self.controller.k2400_instrument.outp_OFF()
+        # print('unsubscribing measurement')
+
 
 
 def decorate_ax(ax):

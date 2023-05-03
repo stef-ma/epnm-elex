@@ -29,26 +29,36 @@ class InstSelect(NewFrame):
         frame2=NewFrame(frame,controller.width/2-5,controller.pane_height*2-5)
         frame2.pack(side='right')
         # Create Select k2612B_instrument button.
-        button2 = ttk.Button(frame1, text="Select Instument: K2612B",
+        lbut1 = ttk.Button(frame1, text="Select Instument: K2612B",
                              command=lambda: controller._setInstrument_K2612B(instrument_listbox, instrument_list))
-        button2.pack(padx=10, pady=10, )
+        lbut1.pack(padx=10, pady=10, )
         # Create Select k2612B_instrument button.
-        button3 = ttk.Button(frame1, text="Select Instument: K2182A",
+        lbut2 = ttk.Button(frame1, text="Select Instument: K2182A",
                              command=lambda: controller._setInstrument_K2182A(instrument_listbox, instrument_list))
-        button3.pack(padx=10, pady=10, )
+        lbut2.pack(padx=10, pady=10, )
         # Create Select k2612B_instrument button.
-        button4 = ttk.Button(frame1, text="Select Instument K6221",
+        lbut3 = ttk.Button(frame1, text="Select Instument K6221",
                              command=lambda: controller._setInstrument_K6221(instrument_listbox, instrument_list))
-        button4.pack(padx=10, pady=10, )
-        # Create Switch to InstCont_K2612B button.
-        button5 = ttk.Button(frame2, text="SETUP: K2612B SOLO",
-                             command=lambda: controller._show_frame(InstCont_K2612B))
-        button5.pack(padx=10, pady=10, )
-        button6 = ttk.Button(frame2, text="SETUP: K2612B + K2182A",
-                             command=lambda: controller._show_frame(InstCont_K2612BandK2182A))
-        button6.pack(padx=10, pady=10, )
+        lbut3.pack(padx=10, pady=10, )
+        # Create Select k2400_instrument button.
+        lbut4 = ttk.Button(frame1, text="Select Instument K2400",
+                             command=lambda: controller._setInstrument_K2400(instrument_listbox, instrument_list))
+        lbut4.pack(padx=10, pady=10, )
 
-        button7 = ttk.Button(frame2, text="SETUP: K6221 + K2182A",
+        # Create Control Board Selectors
+        rbut1 = ttk.Button(frame2, text="SETUP: K2612B SOLO",
+                             command=lambda: controller._show_frame(InstCont_K2612B))
+        rbut1.pack(padx=10, pady=10, )
+
+        rbut2 = ttk.Button(frame2, text="SETUP: K2612B + K2182A",
+                             command=lambda: controller._show_frame(InstCont_K2612BandK2182A))
+        rbut2.pack(padx=10, pady=10, )
+
+        rbut3 = ttk.Button(frame2, text="SETUP: K6221 + K2182A",
                              command=lambda: controller._show_frame(InstCont_K6221andK2182A))
-        button7.pack(padx=10, pady=10, )
+        rbut3.pack(padx=10, pady=10, )
+
+        rbut4 = ttk.Button(frame2, text="SETUP: K2400 + K2182A",
+                             command=lambda: controller._show_frame(InstCont_K2400andK2182A))
+        rbut4.pack(padx=10, pady=10, )
 

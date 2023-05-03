@@ -530,7 +530,7 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
             elif what == 'MEAS' and value == 'I':
                 self.k2400_instrument.meas_I()
             elif what == 'MEAS' and value == 'V':
-                self.k2400_instrument.measure_channel()
+                self.k2400_instrument.meas_V()
             elif what == 'SENS' and value == '2-Point':
                 self.k2400_instrument.sense_local()
                 # not implemented
@@ -651,3 +651,94 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         self.file_obj.write(line + '\n')
         self.file_obj.flush()
         os.fsync(self.file_obj)
+
+    def start_measurement(self,myflt):
+        if self.k2612B_instrument:
+            self.start_measurements_sourced_on_K2612B(myflt)
+        elif self.k2400_instrument:
+            self.start_measurements_sourced_on_K2400(myflt)
+
+    def start_measurements_sourced_on_K2612B(self, myflt):
+        print(self.filedir)
+        if myflt == 'Rt' or myflt == 'PLS':
+            cond = self._check_conditions_K2612B(InstCont_K2612B)
+        elif myflt == 'Rt_nvm' or myflt == 'PLS_nvm':
+            cond = self._check_conditions_K2612B(InstCont_K2612BandK2182A)
+
+        if cond:
+            if myflt == 'Rt':
+                m = R_t_Measurement(self.mid_frame, self)
+                m.grid(row=0, column=0, sticky="nsew")
+                self.mid_subframes[R_t_Measurement] = m
+                self._show_frame(R_t_Measurement)
+            elif myflt == 'IV':
+                m = I_V_Measurement(self.mid_frame, self)
+                m.grid(row=0, column=0, sticky="nsew")
+                self.mid_subframes[I_V_Measurement] = m
+                self._show_frame(I_V_Measurement)
+            elif myflt == 'PLS':
+                m = Pulse_Series_Measurement(self.mid_frame, self)
+                m.grid(row=0, column=0, sticky="nsew")
+                self.mid_subframes[Pulse_Series_Measurement] = m
+                self._show_frame(Pulse_Series_Measurement)
+            elif myflt == 'Rt_nvm':
+                m = R_t_Measurement_K2612Bandk2182A(self.mid_frame, self)
+                m.grid(row=0, column=0, sticky="nsew")
+                self.mid_subframes[R_t_Measurement_K2612Bandk2182A] = m
+                self._show_frame(R_t_Measurement_K2612Bandk2182A)
+            elif myflt == 'PLS_nvm':
+                m = Pulse_Series_Measurement_K2612Bandk2182A(self.mid_frame, self)
+                m.grid(row=0, column=0, sticky="nsew")
+                self.mid_subframes[Pulse_Series_Measurement_K2612Bandk2182A] = m
+                self._show_frame(Pulse_Series_Measurement_K2612Bandk2182A)
+            else:
+                raise AssertionError
+
+    def start_measurements_sourced_on_K2400(self, myflt):
+        print(self.filedir)
+        if myflt == 'Rt' or myflt == 'PLS':
+            cond = self._check_conditions_K2612B(InstCont_K2612B)
+        elif myflt == 'Rt_nvm' or myflt == 'PLS_nvm':
+            cond = self._check_conditions_K2612B(InstCont_K2612BandK2182A)
+
+        # if cond:
+        if True:
+            if myflt == 'Rt':
+                m = R_t_Measurement(self.mid_frame, self)
+                m.grid(row=0, column=0, sticky="nsew")
+                self.mid_subframes[R_t_Measurement] = m
+                self._show_frame(R_t_Measurement)
+            elif myflt == 'IV':
+                m = I_V_Measurement(self.mid_frame, self)
+                m.grid(row=0, column=0, sticky="nsew")
+                self.mid_subframes[I_V_Measurement] = m
+                self._show_frame(I_V_Measurement)
+            elif myflt == 'PLS':
+                m = Pulse_Series_Measurement(self.mid_frame, self)
+                m.grid(row=0, column=0, sticky="nsew")
+                self.mid_subframes[Pulse_Series_Measurement] = m
+                self._show_frame(Pulse_Series_Measurement)
+            elif myflt == 'Rt_nvm':
+                m = R_t_Measurement_K2612Bandk2182A(self.mid_frame, self)
+                m.grid(row=0, column=0, sticky="nsew")
+                self.mid_subframes[R_t_Measurement_K2612Bandk2182A] = m
+                self._show_frame(R_t_Measurement_K2612Bandk2182A)
+            elif myflt == 'PLS_nvm':
+                m = Pulse_Series_Measurement_K2612Bandk2182A(self.mid_frame, self)
+                m.grid(row=0, column=0, sticky="nsew")
+                self.mid_subframes[Pulse_Series_Measurement_K2612Bandk2182A] = m
+                self._show_frame(Pulse_Series_Measurement_K2612Bandk2182A)
+            elif myflt == 'Rt_k2400':
+                m = R_t_Measurement_K2400(self.mid_frame, self)
+                m.grid(row=0, column=0, sticky="nsew")
+                self.mid_subframes[R_t_Measurement_K2400] = m
+                self._show_frame(R_t_Measurement_K2400)
+            elif myflt == 'PLS_k2400':
+                m = Pulse_Series_Measurement_K2400(self.mid_frame, self)
+                m.grid(row=0, column=0, sticky="nsew")
+                self.mid_subframes[Pulse_Series_Measurement_K2400] = m
+                self._show_frame(Pulse_Series_Measurement_K2400)
+
+            else:
+                raise AssertionError
+

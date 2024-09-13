@@ -11,7 +11,7 @@ from mylibs.InstCont import *
 mpl.rcParams.update({
     # "text.usetex": True,
     "font.family": "serif",
-    "font.serif": ["Cambria"]
+    # "font.serif": ["Cambria"]
 })
 skatargs1 = {
     'marker': 'v',

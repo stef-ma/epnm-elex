@@ -204,7 +204,8 @@ class AppWindow(tk.Tk):  # inherits the tkinter root window class
         self.img = Image.open("data/logo3.png")  # Use the pillow library to load the image.
         # I should think about maybe replacing this with matplotlib.image
         self.img = self.img.resize((int(self.img.size[0] / fact), int(self.img.size[1] / fact)),
-                                   Image.ANTIALIAS)  # The (int(), int()) is (height, width)
+                                   # Image.ANTIALIAS
+                                   )  # The (int(), int()) is (height, width)
         self.img = ImageTk.PhotoImage(self.img)
         self.logo = tk.Label(banner, bg='black', image=self.img)  # We pack the image as a tk.Label. 
         # Don't judge me I got this from stackoverflow!

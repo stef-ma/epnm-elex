@@ -5,20 +5,23 @@
 from re import split  # We need to process some regular expressions so I'll need the split function from re.
 
 from gpib_ctypes import make_default_gpib
-
-make_default_gpib()  # Comment for NI drivers (Windows)
-
 import pyvisa  # Controls instruments via the VISA protocol
 
-# We create a resourcemanager instance as rm that we use throughout the pyvisa k2612B_instrument control.
-rm = pyvisa.ResourceManager('@py')  # FOSS pyvisa driver
-
-
-# rm = pyvisa.ResourceManager('@ivi')  # ni-visa pyvisa driver on my Linux (5.18.5-1-MANJARO)
-# rm = pyvisa.ResourceManager()  # default, I think the ni-visa pyvisa driver
-
-
-# rm = pyvisa.ResourceManager('C:\\Windows\\sysWOW64\\visa32.dll') # NI driver (windows)
+from sys import platform
+if platform == "linux" or platform == "linux2":
+    # linux
+    from gpib_ctypes import make_default_gpib
+    make_default_gpib()  # Comment for NI drivers (Windows)
+    # We create a resourcemanager instance as rm that we use throughout the pyvisa k2612B_instrument control.
+    rm = pyvisa.ResourceManager('@py')  # FOSS pyvisa driver
+elif platform == "darwin":
+    # OS X
+    print('Invalid OS, grow up!')
+    exit(1)
+elif platform == "win32":
+    # Windows...
+    # rm = pyvisa.ResourceManager()  # default, I think the ni-visa pyvisa driver
+    rm = pyvisa.ResourceManager('@py')
 
 
 def inst_seek():
@@ -297,6 +300,7 @@ class InstClass_K2612B():
         if channel_str in ['a', 'b']:
             self.src_I(channel_str)
             self.src_limit_VOLTS(channel_str, '20')
+            # self.src_limit_VOLTS(channel_str, '200')
             self.src_range_AMPS(channel_str, '0.000001')
             self.src_level_AMPS(channel_str, '0.000000')
         else:

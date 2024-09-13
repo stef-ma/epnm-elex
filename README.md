@@ -1,2 +1,83 @@
 # epnm-elex
-original state
+
+# Pulsed Electromigration Protocol GUI
+
+This project is a Python-based graphical user interface (GUI) designed for controlling and automating the pulsed electromigration protocol used at **EPNM (Experimental Physics of Nanostructured Materials)**, **ULiège**. The software interfaces with various source-measure units and nanovoltmeters, providing a streamlined way to execute the pusled electromigration protocol under different configurations. Created by Stefan Marinković (smarinkovic@uliege.be; marinkovicstefan@outlook.com). See https://doi.org/10.1103/PhysRevApplied.19.054009 for a description of the protocol.
+
+## Features
+- Automated control of source-measure units and nanovoltmeters.
+- Configurable parameters for multiple device types.
+- Real-time plotting of measurement data.
+- Cross-platform support (Linux and Windows).
+- Pulsed electromigration protocol.
+- R(t) measurement.
+  
+## Requirements
+- Python 3.x
+- Libraries:
+  - `numpy`
+  - `matplotlib`
+  - `pyvisa`
+  - `gpib-ctypes`
+  - `Pillow`
+  - `tkinter`
+- Keithley Source-Measure Units and/or Nanovoltmeters:
+  - K2612B (SMU)
+  - K2192A (Nanovoltmeter)
+  - K6221 (Signal Generator)
+  - K24x0 (SMU)
+
+To install these dependencies, run:
+```pip install -r requirements.txt```
+
+## Installation
+1. **Clone the repository:**
+```mkdir epnm-elex```
+```cd epnm-elex```
+```git clone https://github.com/stef-ma/epnm-elex.git```
+2. **Install the requirements:**
+```pip install -r requirements.txt```
+
+3. **Platform-Specific Notes:**
+   - For Linux, ensure you have the necessary FOSS libraries installed. Follow the guidelines for configuring `pyvisa-py` backend, as well as adding `udev` rules for instrument recognition (see [Python USBTMC GitHub](https://github.com/python-ivi/python-usbtmc)).
+   - For Windows, you may need NI-VISA drivers for some configurations.
+
+## Usage
+1. **Launch the GUI:**
+```python main.py```
+
+2. **Select Configuration:**
+   - Choose the source-measure unit or nanovoltmeter configuration from the center display. If none show up, there's something wrong with pyvisa or your instrument connection. This can be painful to configure. Clicking 'EDIT' at any point brings you back to this screen. Once the instrument is selected click the corresponding "Select Instrument" button on the left.
+   - Once all desired instruments are connected select the configuration by clicking the buttons on the right.
+   - Set the saving directory on the bottom left.
+   - Configure your instruments.
+   - Adjust the pulsed electromigration protocol parameters.
+
+3. **Run the Experiment:**
+   - Start the measurement (R(t) or full pusling protocol), and monitor real-time plots.
+   - Threshold resistance can be set in the panel above. Note that it is read in real time and might interrupt measurements during editing if it reads a small number. Set it before starting, or edit it by copy pasting a complete number into it.
+
+4. **Save Data:**
+   - The data is saved in `.csv` format for further analysis in your SAVEDIR.
+
+## Publications
+This code has been used in the following publications:
+- 10.1002/aelm.202101290
+- 10.1103/PhysRevApplied.19.054009
+
+## Contact
+For more information or questions, contact:
+- **Stefan Marinković**
+- Email: marinkovicstefan@outlook.com
+
+## Contributing
+Contributions are welcome! If you find bugs or want to request new features, please open an issue or submit a pull request.
+
+## License
+I didn't take care of the licence yet. Consider it free with attribution.
+
+## Acknowledgements
+Special thanks to the **EPNM ULiege** team for providing the research groundwork and testing the protocol with various equipment setups.
+
+## Known bugs
+The GUI becomes unusably slow in the K2612B+K2192A setup. Do not use.

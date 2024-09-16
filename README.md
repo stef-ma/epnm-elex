@@ -18,6 +18,9 @@ This project is a Python-based graphical user interface (GUI) designed for contr
   - `numpy`
   - `matplotlib`
   - `pyvisa`
+  - `pyvisa-py`
+  - `pyusb`
+  - `pyserial`
   - `gpib-ctypes`
   - `Pillow`
   - `tkinter`
@@ -38,9 +41,56 @@ To install these dependencies, run:
 2. **Install the requirements:**
 ```pip install -r requirements.txt```
 
+
 3. **Platform-Specific Notes:**
-   - For Linux, ensure you have the necessary FOSS libraries installed. Follow the guidelines for configuring `pyvisa-py` backend, as well as adding `udev` rules for instrument recognition (see [Python USBTMC GitHub](https://github.com/python-ivi/python-usbtmc)).
+   - For Linux, ensure you have the necessary FOSS libraries installed. Follow the guidelines for configuring the `pyvisa-py` backend, as well as adding `udev` rules for instrument recognition (see [Python USBTMC GitHub](https://github.com/python-ivi/python-usbtmc)).
    - For Windows, you may need NI-VISA drivers for some configurations.
+
+## Setup and Troubleshooting for pyvisa with GPIB/USB/Serial Backends
+
+### Environment Setup:
+
+- Ensure that all necessary libraries are installed: `pyvisa`, `pyvisa-py`, `pyusb`, `pyserial`, and `gpib-ctypes`.
+  
+  Install them via:
+```pip install pyvisa pyvisa-py pyusb pyserial gpib-ctypes```
+
+
+### GPIB Driver Setup (Linux):
+
+- Install GPIB drivers (`linux-gpib`) and ensure that GPIB kernel modules are loaded before running the program:
+```sudo modprobe gpib_common``` ```sudo modprobe ni_usb_gpib```
+- If using USB instruments, ensure the instrument is recognized using `lsusb` or `gpib_config`. You may also need to add appropriate `udev` rules for the instrument.
+
+### udev Rules for USB/GPIB (Linux Specific):
+  
+For USB and GPIB devices, add `udev` rules to allow non-root access:
+```SUBSYSTEM=="usb", ATTR{idVendor}=="your_vendor_id", ATTR{idProduct}=="your_product_id", MODE="0666"```
+After adding the rule, reload `udev`:
+```sudo udevadm control --reload-rules``` ```sudo udevadm trigger```
+
+### Common Problems and Solutions:
+
+- **Problem: `ModuleNotFoundError` for `pyvisa` or `gpib_ctypes`**
+  - **Solution:** Ensure the correct Python environment is active. Verify that all required libraries are installed.
+
+- **Problem: GPIB errors (`invalid descriptor`, `No such device`)**
+  - **Solution:** Ensure GPIB kernel modules are loaded (`gpib_common`, `ni_usb_gpib`). Verify the device connections and GPIB configuration using `gpib_config`.
+
+- **Problem: USB communication errors (e.g., `[Errno 19] No such device`)**
+  - **Solution:** Check the USB connection and disable power management for the relevant USB port if needed.
+
+- **Problem: Serial communication failures**
+  - **Solution:** Ensure the serial device is properly configured, and avoid serial resources (`ASRL`) if not needed.
+
+- **General Tip:** Enable verbose logging for `pyvisa` to assist in troubleshooting:
+```import pyvisa``` ```pyvisa.log_to_screen()```
+
+### Testing the Setup:
+After setting everything up, use a simple script to confirm the instrument is recognized:
+```import pyvisa rm = pyvisa.ResourceManager('@py')``` 
+```print(rm.list_resources()) # List all connected instruments```
+If the instrument is listed, proceed with opening the resource and sending commands ('*IDN?' is a good starting point).
 
 ## Usage
 1. **Launch the GUI:**

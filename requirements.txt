@@ -1,6 +1,9 @@
 numpy
 matplotlib
 pyvisa
+pyvisa-py
+pyusb
+pyserial
 gpib-ctypes
 Pillow
 tkinter

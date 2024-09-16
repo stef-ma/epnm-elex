@@ -4,13 +4,13 @@
 # See https://github.com/python-ivi/python-usbtmc for example udev rules and guidelines.
 from re import split  # We need to process some regular expressions so I'll need the split function from re.
 
-from gpib_ctypes import make_default_gpib
+#from gpib_ctypes import make_default_gpib
 import pyvisa  # Controls instruments via the VISA protocol
 
 from sys import platform
+from gpib_ctypes import make_default_gpib
 if platform == "linux" or platform == "linux2":
     # linux
-    from gpib_ctypes import make_default_gpib
     make_default_gpib()  # Comment for NI drivers (Windows)
     # We create a resourcemanager instance as rm that we use throughout the pyvisa k2612B_instrument control.
     rm = pyvisa.ResourceManager('@py')  # FOSS pyvisa driver

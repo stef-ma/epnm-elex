@@ -61,7 +61,10 @@ git clone https://github.com/stef-ma/epnm-elex.git
 ### GPIB Driver Setup (Linux):
 
 - Install GPIB drivers (`linux-gpib`) and ensure that GPIB kernel modules are loaded before running the program:
-```sudo modprobe gpib_common``` ```sudo modprobe ni_usb_gpib```
+```
+sudo modprobe gpib_common
+sudo modprobe ni_usb_gpib
+```
 - If using USB instruments, ensure the instrument is recognized using `lsusb` or `gpib_config`. You may also need to add appropriate `udev` rules for the instrument.
 
 ### udev Rules for USB/GPIB (Linux Specific):

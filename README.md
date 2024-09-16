@@ -35,9 +35,11 @@ To install these dependencies, run:
 
 ## Installation
 1. **Clone the repository:**
-```mkdir epnm-elex```
-```cd epnm-elex```
-```git clone https://github.com/stef-ma/epnm-elex.git```
+```
+mkdir epnm-elex
+cd epnm-elex
+git clone https://github.com/stef-ma/epnm-elex.git
+```
 2. **Install the requirements:**
 ```pip install -r requirements.txt```
 
@@ -65,9 +67,14 @@ To install these dependencies, run:
 ### udev Rules for USB/GPIB (Linux Specific):
   
 For USB and GPIB devices, add `udev` rules to allow non-root access:
+
 ```SUBSYSTEM=="usb", ATTR{idVendor}=="your_vendor_id", ATTR{idProduct}=="your_product_id", MODE="0666"```
 After adding the rule, reload `udev`:
-```sudo udevadm control --reload-rules``` ```sudo udevadm trigger```
+
+```
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
 
 ### Common Problems and Solutions:
 
@@ -88,8 +95,13 @@ After adding the rule, reload `udev`:
 
 ### Testing the Setup:
 After setting everything up, use a simple script to confirm the instrument is recognized:
-```import pyvisa rm = pyvisa.ResourceManager('@py')``` 
-```print(rm.list_resources()) # List all connected instruments```
+
+```
+import pyvisa
+rm = pyvisa.ResourceManager('@py')
+print(rm.list_resources()) # List all connected instruments
+```
+
 If the instrument is listed, proceed with opening the resource and sending commands ('*IDN?' is a good starting point).
 
 ## Usage

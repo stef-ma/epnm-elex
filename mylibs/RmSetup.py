@@ -16,7 +16,7 @@ if platform == "linux" or platform == "linux2":
     rm = pyvisa.ResourceManager('@py')  # FOSS pyvisa driver
 elif platform == "darwin":
     # OS X
-    print('Invalid OS, grow up!')
+    print('Invalid OS!')
     exit(1)
 elif platform == "win32":
     # Windows...

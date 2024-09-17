@@ -145,4 +145,4 @@ I didn't take care of the licence yet. Consider it free with attribution.
 Special thanks to the **EPNM ULiege** team for providing the research groundwork and testing the protocol with various equipment setups.
 
 ## Known bugs
-The GUI becomes unusably slow in the K2612B+K2192A setup. Do not use.
+The GUI becomes unusably slow in some configurations. If you encounter this bug let me know, it will be obvious immediately.

@@ -53,6 +53,7 @@ class InstClass_K2612B():
         # Init via rm.open_resource
         self.instrument = rm.open_resource(inst)
         self.instrument.write('reset()')
+        self.instrument.write('status.clear()')
 
     def _close(self):
         # Close via rm.open_resource
@@ -73,12 +74,18 @@ class InstClass_K2612B():
 
     def _query(self, command: str):
         # Query method. Includes some regular expression handling due to the TSP-python communication.
+        self.instrument.write('status.clear()')
         r = split('[\n\t]', self.instrument.query('print(' + command + ')'))
         r_el = [element for element in r if element != '']
         if len(r_el) == 1:
             ans = r_el[0]
         else:
             ans = r_el
+        # if ans == 'true':
+        #     ans = True
+        # elif ans == 'false':
+        #     ans = False
+        self.instrument.write('status.clear()')
         return ans
 
     def sense_remote(self, channel_str: str):
@@ -119,9 +126,14 @@ class InstClass_K2612B():
 
     def measure_channel(self, channel_str: str):
         if channel_str in ['a', 'b']:
-            curr, volt = self._query('smu' + channel_str + '.measure.iv()')
+            response = self._query('smu' + channel_str + '.measure.iv()')
+            if len(response)!=2:
+                curr, volt = 255,255
+                print(f'Bad response: {response}')
+            else:
+                curr, volt = response
         else:
-            curr, volt = 255
+            curr, volt = 255,255
             print('Valid channels are "a" and "b". ')
         return curr, volt
 
